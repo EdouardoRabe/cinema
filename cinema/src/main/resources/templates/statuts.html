@@ -1,0 +1,33 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Statuts de réservation</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background: #f4f4f4; }
+    </style>
+</head>
+<body>
+<h1>Statuts de réservation</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Code</th>
+        <th>Libellé</th>
+        <th>Est final</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="s : ${statuts}">
+        <td th:text="${s.id}">1</td>
+        <td th:text="${s.code}">CREEE</td>
+        <td th:text="${s.libelle}">Creee</td>
+        <td th:text="${s.estFinal}">false</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

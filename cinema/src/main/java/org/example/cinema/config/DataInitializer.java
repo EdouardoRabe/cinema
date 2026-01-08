@@ -31,4 +31,22 @@ public class DataInitializer {
             System.out.println("Films after init: " + filmRepository.count());
         };
     }
+
+    @Bean
+    CommandLineRunner initStatuts(org.example.cinema.repository.StatutReservationRepository statutRepository) {
+        return args -> {
+            long c = statutRepository.count();
+            System.out.println("StatutReservation in DB before init: " + c);
+            if (c == 0) {
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("CREEE").libelle("Creee").estFinal(false).build());
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("EN_ATTENTE").libelle("En attente de paiement").estFinal(false).build());
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("PAYEE").libelle("Payee").estFinal(false).build());
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("CONFIRMEE").libelle("Confirmee").estFinal(false).build());
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("ANNULEE").libelle("Annulee").estFinal(true).build());
+                statutRepository.save(org.example.cinema.model.StatutReservation.builder().code("EXPIREE").libelle("Expiree").estFinal(true).build());
+                System.out.println("Inserted default statut_reservation entries");
+            }
+            System.out.println("StatutReservation after init: " + statutRepository.count());
+        };
+    }
 }
