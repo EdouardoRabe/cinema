@@ -146,19 +146,53 @@ a {
 .filter-select, .filter-input { min-width: 200px; }
 
 /* Date input calendar icon styling for dark theme */
-input[type="date"] {
+input[type="date"],
+input[type="datetime-local"] {
     color-scheme: dark;
+    background-color: var(--bg-card);
+    border: 1px solid var(--bg-hover);
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]:focus,
+input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.8;
     transition: opacity 0.2s ease;
+    padding: 4px;
+    margin-left: 8px;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+}
+
+/* Firefox specific date input fixes */
+input[type="date"]::-moz-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+/* Edge/IE date input fixes */
+input[type="date"]::-ms-clear,
+input[type="date"]::-ms-reveal {
+    display: none;
 }
 
 .btn {
