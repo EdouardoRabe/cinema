@@ -160,8 +160,7 @@ public class ReservationController {
             }
 
             // Créer la réservation
-            Reservation reservation = reservationService.createReservation(
-                    client, seance, placesWithCategories, categoriesMap);
+            reservationService.createReservation(client, seance, placesWithCategories, categoriesMap);
 
             redirectAttributes.addAttribute("success", "true");
             return "redirect:/reservation/" + seanceId;

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Film')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${film.titre}">Titre</h2>
+            <a th:href="@{/backoffice/films/edit/{id}(id=${film.id})}" class="btn btn-outline">Éditer</a>
+        </div>
+
+        <div class="film-detail">
+            <div class="film-detail-poster">
+                <div class="film-poster-placeholder" style="aspect-ratio: 2/3; font-size: 6rem;">🎬</div>
+            </div>
+            <div class="film-detail-content">
+                <h1 th:text="${film.titre}">Titre du film</h1>
+                <div class="film-meta">
+                    <p><strong>Date de sortie:</strong> <span th:text="${film.dateSortie}"></span></p>
+                    <p><strong>Durée:</strong> <span th:text="${film.dureeMinutes != null ? film.dureeMinutes + ' min' : 'N/A'}"></span></p>
+                    <p><strong>Langue originale:</strong> <span th:text="${film.langueOriginale}"></span></p>
+                    <p th:if="${film.ageMin != null}"><strong>Âge min:</strong> <span th:text="${film.ageMin}"></span></p>
+                </div>
+                <div class="film-genres">
+                    <span th:each="g : ${film.genres}" class="genre-tag" th:text="${g.libelle}">Action</span>
+                </div>
+                <div class="film-synopsis">
+                    <p th:text="${film.description}">Description...</p>
+                </div>
+                <div th:if="${seances != null}">
+                    <h4>Séances à venir</h4>
+                    <ul>
+                        <li th:each="s : ${seances}">
+                            <span th:text="${#temporals.format(s.debut,'dd/MM HH:mm')}"></span> — <span th:text="${s.salle.nom}"></span> (<a th:href="@{/backoffice/seances/view/{id}(id=${s.id})}">Voir</a>)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -50,17 +50,18 @@ public class FilmService {
      * Recherche de films avec filtres combinés
      */
     public List<Film> findWithFilters(Long genreId, String langue, LocalDate date) {
-        if (genreId != null && langue != null && !langue.isEmpty()) {
-            return findByGenreIdAndLangue(genreId, langue);
-        } else if (genreId != null) {
-            return findByGenreId(genreId);
-        } else if (langue != null && !langue.isEmpty()) {
-            return findByLangue(langue);
-        } else if (date != null) {
-            return findByDate(date);
-        } else {
+        // backward compatible simple filters (kept) -> delegate to more advanced method if needed
+        if ((genreId == null || genreId == 0) && (langue == null || langue.isBlank()) && date == null) {
             return findAll();
         }
+        return repository.findWithFilters(null, genreId, langue, date, date);
+    }
+
+    /**
+     * Backoffice advanced filters: title, genre, langue, date range
+     */
+    public List<Film> findWithFiltersAdvanced(String title, Long genreId, String langue, LocalDate dateFrom, LocalDate dateTo) {
+        return repository.findWithFilters(title, genreId, langue, dateFrom, dateTo);
     }
 
     public Film save(Film film) {
@@ -69,5 +70,9 @@ public class FilmService {
 
     public void deleteById(Long id) {
         repository.deleteById(id);
+    }
+
+    public void delete(Film film) {
+        repository.delete(film);
     }
 }

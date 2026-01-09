@@ -3,33 +3,25 @@ DROP DATABASE IF EXISTS cinema;
 CREATE DATABASE cinema;
 \c cinema;
 
--- ------------------------------
--- TYPE DE PLACE
--- ------------------------------
 CREATE TABLE type_place (
     id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL -- STANDARD, VIP, PMR
+    libelle TEXT NOT NULL
 );
 
--- ------------------------------
--- CATEGORIE PERSONNE
--- ------------------------------
 CREATE TABLE categorie_personne (
     id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL -- ADULTE, ENFANT, SENIOR...
+    libelle TEXT NOT NULL 
 );
 
--- ------------------------------
--- FILMS & GENRES
--- ------------------------------
+
 CREATE TABLE film (
     id SERIAL PRIMARY KEY,
     titre TEXT NOT NULL,
     description TEXT,
     duree_minutes INT,
     date_sortie DATE,
-    age_min INT DEFAULT 0, -- age minimum conseille
-    langue_originale TEXT, -- langue du film
+    age_min INT DEFAULT 0, 
+    langue_originale TEXT, 
     cree_le TIMESTAMPTZ DEFAULT now()
 );
 
@@ -44,9 +36,7 @@ CREATE TABLE film_genre (
     PRIMARY KEY (id_film, id_genre)
 );
 
--- ------------------------------
--- SALLES & PLACES
--- ------------------------------
+
 CREATE TABLE salle (
     id SERIAL PRIMARY KEY,
     nom TEXT NOT NULL,
@@ -65,9 +55,7 @@ CREATE TABLE place (
     UNIQUE (id_salle, rangee, numero)
 );
 
--- ------------------------------
--- SEANCES
--- ------------------------------
+
 CREATE TABLE seance (
     id SERIAL PRIMARY KEY,
     id_film INT REFERENCES film(id),
@@ -81,9 +69,7 @@ CREATE TABLE seance (
 CREATE INDEX idx_seance_salle_debut
 ON seance(id_salle, debut);
 
--- ------------------------------
--- PERSONNES (Clients)
--- ------------------------------
+
 CREATE TABLE personne (
     id SERIAL PRIMARY KEY,
     nom_complet TEXT,
@@ -93,31 +79,22 @@ CREATE TABLE personne (
     cree_le TIMESTAMPTZ DEFAULT now()
 );
 
--- ------------------------------
--- STATUTS RESERVATION
--- ------------------------------
 CREATE TABLE statut_reservation (
     id SERIAL PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL, -- CREEE, EN_ATTENTE, PAYEE, CONFIRMEE, ANNULEE, EXPIREE
+    code TEXT UNIQUE NOT NULL, 
     libelle TEXT NOT NULL,
     est_final BOOLEAN DEFAULT false
 );
 
--- ------------------------------
--- RESERVATIONS
--- ------------------------------
 CREATE TABLE reservation (
     id SERIAL PRIMARY KEY,
-    id_personne INT REFERENCES personne(id) NULL, -- nullable pour vente sur place
-    id_seance INT REFERENCES seance(id),
+    id_personne INT REFERENCES personne(id) NULL, 
     id_statut INT REFERENCES statut_reservation(id),
     montant_total NUMERIC(6,2) DEFAULT 0,
     cree_le TIMESTAMPTZ DEFAULT now()
 );
 
--- ------------------------------
--- HISTORIQUE STATUT RESERVATION
--- ------------------------------
+
 CREATE TABLE historique_statut_reservation (
     id SERIAL PRIMARY KEY,
     id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
@@ -127,19 +104,14 @@ CREATE TABLE historique_statut_reservation (
     commentaire TEXT
 );
 
--- ------------------------------
--- STATUTS TICKET
--- ------------------------------
 CREATE TABLE statut_ticket (
     id SERIAL PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL, -- RESERVE, PAYE, ANNULE, UTILISE, REMBOURSE
+    code TEXT UNIQUE NOT NULL, 
     libelle TEXT NOT NULL,
     est_final BOOLEAN DEFAULT false
 );
 
--- ------------------------------
--- TICKETS
--- ------------------------------
+
 CREATE TABLE ticket (
     id SERIAL PRIMARY KEY,
     id_reservation INT REFERENCES reservation(id) NULL, -- nullable pour ticket sans reservation

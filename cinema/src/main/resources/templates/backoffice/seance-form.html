@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Séance')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${seance.id} != null ? 'Éditer séance' : 'Nouvelle séance'"></h2>
+        </div>
+
+        <form th:action="@{/backoffice/seances/save}" method="post">
+            <input type="hidden" name="id" th:value="${seance.id}" />
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Film</label>
+                    <select class="form-input" name="film.id" required>
+                        <option value="">-- Choisir un film --</option>
+                        <option th:each="f : ${films}" th:value="${f.id}" th:text="${f.titre}" th:selected="${seance.film != null and seance.film.id == f.id}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Salle</label>
+                    <select class="form-input" name="salle.id" required>
+                        <option value="">-- Choisir une salle --</option>
+                        <option th:each="s : ${salles}" th:value="${s.id}" th:text="${s.nom}" th:selected="${seance.salle != null and seance.salle.id == s.id}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Début</label>
+                    <input class="form-input" type="datetime-local" name="debut" th:value="${seance.debut != null ? #dates.formatISO(seance.debut) : ''}" required />
+                </div>
+                <div class="form-group">
+                    <label>Langue</label>
+                    <select class="form-input" name="langue" required>
+                        <option value="FR" th:selected="${seance.langue == 'FR'}">FR</option>
+                        <option value="EN" th:selected="${seance.langue == 'EN'}">EN</option>
+                        <option value="VOST" th:selected="${seance.langue == 'VOST'}">VOST</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a th:href="@{/backoffice/seances}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

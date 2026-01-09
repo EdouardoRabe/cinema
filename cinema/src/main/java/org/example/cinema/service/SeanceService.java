@@ -89,4 +89,8 @@ public class SeanceService {
     public Seance save(Seance seance) {
         return repository.save(seance);
     }
+
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
 }

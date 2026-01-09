@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle réservation')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Nouvelle réservation</h2>
+        </div>
+
+        <form th:action="@{/backoffice/reservations/save}" method="post">
+            <input type="hidden" name="seanceId" th:value="${seance != null} ? ${seance.id} : ''"/>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Client</label>
+                    <select name="clientId" class="form-input" required>
+                        <option value="">-- Choisir un client --</option>
+                        <option th:each="c : ${clients}" th:value="${c.id}" th:text="${c.nomComplet} + ' (' + (c.email != null ? c.email : '') + ')' "></option>
+                    </select>
+                </div>
+                <div class="form-group" th:if="${seance != null}" style="grid-column: 1 / -1;">
+                    <h3 th:text="${seance.film.titre}"></h3>
+                    <p th:text="${#temporals.format(seance.debut, 'dd/MM/yyyy HH:mm')}"></p>
+                </div>
+            </div>
+
+            <div th:if="${seance != null}">
+                <div class="seat-selection">
+                    <div class="screen"></div>
+                    <div class="seats-container">
+                        <div th:each="row : ${rows}" class="seat-row">
+                            <span class="row-label" th:text="${row}">A</span>
+                            <div th:each="place : ${placesByRow.get(row)}" 
+                                 class="seat"
+                                 th:classappend="${placesOccupees.contains(place.id)} ? 'taken' : (${place.typePlace?.libelle == 'VIP'} ? 'vip' : '')"
+                                 th:data-id="${place.id}"
+                                 th:data-numero="${place.numero}"
+                                 th:data-row="${row}"
+                                 th:onclick="${placesOccupees.contains(place.id)} ? '' : 'openCategoryModal(this)'"
+                                 th:text="${place.numero}">1</div>
+                            <span class="row-label" th:text="${row}">A</span>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="selectedSeats" name="selectedSeats" value="">
+
+                <div style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">Créer réservation</button>
+                    <a th:href="@{/backoffice/reservations}" class="btn btn-outline">Annuler</a>
+                </div>
+            </div>
+
+        </form>
+    </section>
+
+    <div id="categoryModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Choisir la catégorie</h3>
+            <div th:each="cat : ${categories}">
+                <button type="button" th:data-id="${cat.id}" th:data-name="${cat.libelle}" th:data-price="${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}" onclick="selectCategory(this)">[[${cat.libelle}]] - [[${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}]] Ar</button>
+            </div>
+            <div style="margin-top: 1rem;"><button type="button" onclick="closeCategoryModal()">Fermer</button></div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    <script th:inline="javascript">
+        /* Basic seat selection logic (similar to front office) */
+        const selectedSeatsMap = {};
+        function openCategoryModal(el) {
+            document.getElementById('categoryModal').style.display = 'block';
+            document.getElementById('categoryModal').dataset.placeId = el.dataset.id;
+        }
+        function closeCategoryModal() { document.getElementById('categoryModal').style.display = 'none'; }
+        function selectCategory(btn) {
+            const placeId = document.getElementById('categoryModal').dataset.placeId;
+            const catId = btn.dataset.id;
+            const seatEl = document.querySelector(`.seat[data-id="${placeId}"]`);
+            seatEl.classList.add('selected');
+            const row = seatEl.dataset.row; const num = seatEl.dataset.numero;
+            selectedSeatsMap[placeId] = {categorieId: catId, row: row, numero: num};
+            updateSelectedInput();
+            closeCategoryModal();
+        }
+        function updateSelectedInput(){
+            const arr = Object.entries(selectedSeatsMap).map(([k,v]) => `${k}:${v.categorieId}`);
+            document.getElementById('selectedSeats').value = arr.join(',');
+        }
+    </script>
+</body>
+</html>

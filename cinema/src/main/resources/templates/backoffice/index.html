@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice')}"/>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="container">
+            <h1 class="section-title">Backoffice</h1>
+            <p class="mb-4">Bienvenue dans le panneau d'administration minimal. Utilisez les liens ci-dessous pour gérer le contenu.</p>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ressource</th>
+                            <th>Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Films</td>
+                            <td th:text="${filmCount}">0</td>
+                            <td><a th:href="@{/backoffice/films}" class="btn btn-outline">Voir</a></td>
+                        </tr>
+                        <tr>
+                            <td>Séances</td>
+                            <td th:text="${seanceCount}">0</td>
+                            <td><a th:href="@{/backoffice/seances}" class="btn btn-outline">Voir</a></td>
+                        </tr>
+                        <tr>
+                            <td>Réservations</td>
+                            <td th:text="${reservationCount}">0</td>
+                            <td><a th:href="@{/backoffice/reservations}" class="btn btn-outline">Voir</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

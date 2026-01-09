@@ -18,4 +18,8 @@ public class GenreService {
     public List<Genre> findAll() {
         return repository.findAll();
     }
+
+    public List<Genre> findByIds(Iterable<Long> ids) {
+        return repository.findAllById(ids);
+    }
 }

@@ -129,6 +129,14 @@ a {
     gap: 1rem;
 }
 
+/* Backoffice navbar tweaks */
+.navbar.backoffice { background: rgba(10,10,10,0.96); }
+.navbar.backoffice .nav-links a { color: var(--text-secondary); }
+.navbar.backoffice .nav-links a.active { color: var(--text-primary); }
+
+/* Form inputs uniform */
+.form-input { width: 100%; box-sizing: border-box; }
+
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 50px;
@@ -293,6 +301,27 @@ a {
 /* ========================================
    FILM CARDS
    ======================================== */
+
+/* Backoffice helper classes */
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.card {
+    background: var(--bg-card);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+}
+
+@media (max-width: 768px) {
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 .films-grid {
     display: grid;
@@ -697,10 +726,31 @@ a {
     border: 2px solid transparent;
     border-radius: var(--border-radius);
     padding: 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition);
 }
+
+/* Simple table styles for backoffice */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.table th, .table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    text-align: left;
+}
+
+.table .btn {
+    margin-right: 0.5rem;
+}
+
+.table-lg th, .table-lg td {
+    padding: 1.25rem;
+    font-size: 1rem;
+}
+
 
 .category-card:hover {
     border-color: var(--text-muted);

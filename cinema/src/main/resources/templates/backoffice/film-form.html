@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Film')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${film.id == null ? 'Créer un film' : 'Modifier le film'}">Créer / Modifier</h2>
+        </div>
+
+        <form th:action="@{/backoffice/films/save}" th:object="${film}" method="post">
+            <input type="hidden" th:field="*{id}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input class="form-input" type="text" th:field="*{titre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Duree (minutes)</label>
+                    <input class="form-input" type="number" th:field="*{dureeMinutes}">
+                </div>
+                <div class="form-group">
+                    <label>Date de sortie</label>
+                    <input class="form-input" type="date" th:field="*{dateSortie}">
+                </div>
+                <div class="form-group">
+                    <label>Age min</label>
+                    <input class="form-input" type="number" th:field="*{ageMin}">
+                </div>
+                <div class="form-group">
+                    <label>Langue originale</label>
+                    <input class="form-input" type="text" th:field="*{langueOriginale}">
+                </div>
+                <div class="form-group">
+                    <label>Genres</label>
+                    <select class="form-input" name="genreIds" multiple>
+                        <option th:each="g : ${genres}" th:value="${g.id}"
+                                th:text="${g.libelle}"
+                                th:selected="${selectedGenreIds != null and selectedGenreIds.contains(g.id)}"></option>
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Synopsis</label>
+                    <textarea class="form-input" th:field="*{description}" rows="6"></textarea>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a th:href="@{/backoffice/films}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

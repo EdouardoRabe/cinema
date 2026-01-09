@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Séance')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${seance.film.titre}">Séance</h2>
+            <a th:href="@{/backoffice/reservations/create(seanceId=${seance.id})}" class="btn btn-primary">Créer réservation</a>
+        </div>
+
+        <div class="seat-selection">
+            <div class="screen"></div>
+            <div class="seats-container">
+                <div th:each="row : ${rows}" class="seat-row">
+                    <span class="row-label" th:text="${row}">A</span>
+                    <div th:each="place : ${placesByRow.get(row)}" 
+                         class="seat"
+                         th:classappend="${placesOccupees.contains(place.id)} ? 'taken' : (${place.typePlace?.libelle == 'VIP'} ? 'vip' : '')"
+                         th:text="${place.numero}">1</div>
+                    <span class="row-label" th:text="${row}">A</span>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

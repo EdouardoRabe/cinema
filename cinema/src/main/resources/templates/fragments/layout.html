@@ -12,7 +12,26 @@
 
 <!-- Fragment: Navbar -->
 <nav th:fragment="navbar(activePage)" class="navbar" th:classappend="${activePage != 'home'} ? 'scrolled' : ''">
-    <div class="nav-container">
+    <div th:if="${activePage == 'backoffice'}" class="nav-container backoffice">
+        <a th:href="@{/backoffice}" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+            </svg>
+            CinéMax Backoffice
+        </a>
+        <ul class="nav-links">
+            <li><a th:href="@{/backoffice}" th:classappend="${activePage == 'backoffice'} ? 'active' : ''">Tableau de bord</a></li>
+            <li><a th:href="@{/backoffice/films}">Films</a></li>
+            <li><a th:href="@{/backoffice/seances}">Séances</a></li>
+            <li><a th:href="@{/backoffice/reservations}">Réservations</a></li>
+            <li><a th:href="@{/backoffice/clients}">Clients</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a th:href="@{/}" class="btn btn-outline">Voir le site</a>
+            <a th:href="@{/logout}" class="btn">Déconnexion</a>
+        </div>
+    </div>
+    <div th:if="${activePage != 'backoffice'}" class="nav-container">
         <a th:href="@{/}" class="logo">
             <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
@@ -63,6 +82,14 @@
         </div>
     </div>
 </nav>
+
+<!-- Flash messages (global) -->
+<section th:if="${successMessage != null or errorMessage != null}" class="section" style="padding-top: 5rem;">
+    <div class="container">
+        <div th:if="${successMessage != null}" class="alert alert-success"><strong>✓</strong> <span th:text="${successMessage}"></span></div>
+        <div th:if="${errorMessage != null}" class="alert alert-error"><strong>✕</strong> <span th:text="${errorMessage}"></span></div>
+    </div>
+</section>
 
 <!-- Fragment: Footer -->
 <footer th:fragment="footer" class="footer">

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Séances')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Séances à venir</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Film</th>
+                        <th>Salle</th>
+                        <th>Date & Heure</th>
+                        <th>Langue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="seance : ${seances}">
+                        <td th:text="${seance.id}">1</td>
+                        <td th:text="${seance.film.titre}">Film</td>
+                        <td th:text="${seance.salle.nom}">Salle</td>
+                        <td th:text="${#temporals.format(seance.debut, 'dd/MM/yyyy HH:mm')}">01/01/2026 14:00</td>
+                        <td th:text="${seance.langue}">VOST</td>
+                        <td>
+                            <a th:href="@{/backoffice/seances/view/{id}(id=${seance.id})}" class="btn btn-outline">Voir</a>
+                            <a th:href="@{/backoffice/seances/edit/{id}(id=${seance.id})}" class="btn btn-primary">Éditer</a>
+                            <form th:action="@{/backoffice/seances/delete/{id}(id=${seance.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette séance ?');">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

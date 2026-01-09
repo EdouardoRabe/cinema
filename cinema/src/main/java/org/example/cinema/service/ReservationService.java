@@ -44,6 +44,10 @@ public class ReservationService {
         return reservationRepository.findById(id);
     }
 
+    public List<Reservation> findAll() {
+        return reservationRepository.findAll();
+    }
+
     /**
      * Crée une réservation avec les places sélectionnées.
      * @param client Le client qui fait la réservation
@@ -104,5 +108,15 @@ public class ReservationService {
 
     public List<Ticket> getTicketsByReservation(Long reservationId) {
         return ticketRepository.findByReservationId(reservationId);
+    }
+
+    @Transactional
+    public Reservation updateStatus(Long reservationId, Long statutId) {
+        Reservation res = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
+        StatutReservation statut = statutReservationRepository.findById(statutId)
+                .orElseThrow(() -> new RuntimeException("Statut non trouvé"));
+        res.setStatut(statut);
+        return reservationRepository.save(res);
     }
 }

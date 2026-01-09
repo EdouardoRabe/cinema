@@ -47,4 +47,8 @@ public class ClientService {
                 .build();
         return repository.save(client);
     }
+
+    public java.util.List<Client> findAll() {
+        return repository.findAll();
+    }
 }

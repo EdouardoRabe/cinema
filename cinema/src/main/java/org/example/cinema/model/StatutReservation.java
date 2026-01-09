@@ -18,5 +18,6 @@ public class StatutReservation {
     @Column(nullable = false)
     private String libelle;
 
+    @Builder.Default
     private Boolean estFinal = false;
 }

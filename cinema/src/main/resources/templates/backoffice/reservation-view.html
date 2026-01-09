@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Réservation')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Détails réservation</h2>
+            <a th:href="@{/backoffice/reservations}" class="btn btn-outline">Retour</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <p><strong>Client:</strong> <span th:text="${reservation.client != null ? reservation.client.nomComplet : 'Vente sur place'}"></span></p>
+                <p><strong>Séance:</strong> <span th:text="${reservation.seance != null ? (#temporals.format(reservation.seance.debut,'dd/MM HH:mm') + ' - ' + reservation.seance.film.titre) : 'N/A'}"></span></p>
+                <p><strong>Montant:</strong> <span th:text="${reservation.montantTotal}"></span></p>
+                <p><strong>Statut:</strong> <span th:text="${reservation.statut != null ? reservation.statut.libelle : 'N/A'}"></span></p>
+                <h4>Tickets</h4>
+                <table class="table">
+                    <thead>
+                        <tr><th>Place</th><th>Catégorie</th><th>Prix</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t : ${reservation.tickets}">
+                            <td th:text="${t.place.numero} + ' (' + t.place.rang + ')'">1 (A)</td>
+                            <td th:text="${t.categoriePersonne != null ? t.categoriePersonne.libelle : 'N/A'}">Adulte</td>
+                            <td th:text="${t.prix}">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

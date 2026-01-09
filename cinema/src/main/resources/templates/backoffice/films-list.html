@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Films')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Films</h2>
+            <a th:href="@{/backoffice/films/create}" class="btn btn-primary">Nouveau film</a>
+        </div>
+
+        <form method="get" th:action="@{/backoffice/films}" class="filters" style="margin-bottom: 1rem;">
+            <div class="filter-group">
+                <label class="filter-label">Titre</label>
+                <input type="text" name="title" class="filter-input" th:value="${title}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Genre</label>
+                <select name="genreId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    <option th:each="g : ${genres}" th:value="${g.id}" th:text="${g.libelle}" th:selected="${selectedGenre == g.id}">Genre</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Langue</label>
+                <select name="langue" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Toutes</option>
+                    <option value="FR" th:selected="${selectedLangue == 'FR'}">Français</option>
+                    <option value="EN" th:selected="${selectedLangue == 'EN'}">Anglais</option>
+                    <option value="VOST" th:selected="${selectedLangue == 'VOST'}">VOST</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date de sortie (de)</label>
+                <input type="date" name="dateFrom" class="filter-input" th:value="${dateFrom}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date de sortie (à)</label>
+                <input type="date" name="dateTo" class="filter-input" th:value="${dateTo}">
+            </div>
+            <div class="filter-group" style="align-self: end;">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a th:href="@{/backoffice/films}" class="btn btn-outline">Réinitialiser</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Date de sortie</th>
+                        <th>Durée</th>
+                        <th>Langue</th>
+                        <th>Genres</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="film : ${films}">
+                        <td th:text="${film.titre}">Titre</td>
+                        <td th:text="${film.dateSortie}">2026-01-01</td>
+                        <td th:text="${film.dureeMinutes}">120</td>
+                        <td th:text="${film.langueOriginale}">FR</td>
+                        <td>
+                            <span th:each="g, iter : ${film.genres}" th:text="${g.libelle} + (!iter.last ? ', ' : '')">Action</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/backoffice/films/view/{id}(id=${film.id})}" class="btn btn-outline">Voir</a>
+                            <a th:href="@{/backoffice/films/edit/{id}(id=${film.id})}" class="btn btn-primary">Éditer</a>
+                            <form th:action="@{/backoffice/films/delete/{id}(id=${film.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer ce film ?');">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

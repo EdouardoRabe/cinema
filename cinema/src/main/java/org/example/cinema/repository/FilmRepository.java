@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
-public interface FilmRepository extends JpaRepository<Film, Long> {
+public interface FilmRepository extends JpaRepository<Film, Long>, org.example.cinema.repository.custom.FilmRepositoryCustom {
 
     @Query("SELECT DISTINCT f FROM Film f JOIN f.genres g WHERE g.id = :genreId")
     List<Film> findByGenreId(@Param("genreId") Long genreId);
