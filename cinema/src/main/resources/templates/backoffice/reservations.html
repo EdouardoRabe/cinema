@@ -12,29 +12,33 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Client</th>
                         <th>Séance</th>
                         <th>Montant</th>
                         <th>Statut</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="r : ${reservations}">
-                        <td th:text="${r.id}">1</td>
                         <td th:text="${r.client != null ? r.client.nomComplet : 'Vente sur place'}">Client</td>
                         <td th:text="${r.seance != null ? (#temporals.format(r.seance.debut, 'dd/MM HH:mm') + ' - ' + r.seance.film.titre) : 'N/A'}">Séance</td>
                         <td th:text="${r.montantTotal}">0</td>
                         <td>
-                            <form th:action="@{/backoffice/reservations/change-status/{id}(id=${r.id})}" method="post">
-                                <select name="statutId"  class="form-input">
-                                    <option th:each="s : ${statuts}" th:value="${s.id}" th:text="${s.libelle}" th:selected="${r.statut != null and r.statut.id == s.id}">Statut</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm">OK</button>
-                            </form>
+                            <div class="status-change">
+                                <form th:action="@{/backoffice/reservations/change-status/{id}(id=${r.id})}" method="post" style="display:flex;gap:0.5rem;align-items:center">
+                                    <select name="statutId" class="form-input" style="min-width: 180px;">
+                                        <option th:each="s : ${statuts}" th:value="${s.id}" th:text="${s.libelle}" th:selected="${r.statut != null and r.statut.id == s.id}">Statut</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">OK</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <a th:href="@{/backoffice/reservations/view/{id}(id=${r.id})}" class="btn btn-outline">Voir</a>
                         </td>
                     </tr>
-                </tbody>
+                </tbody> 
             </table>
         </div>
     </section>

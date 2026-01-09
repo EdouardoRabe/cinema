@@ -97,6 +97,7 @@ public class ReservationBackofficeController {
     public String save(@RequestParam(name = "seanceId") Long seanceId,
                        @RequestParam(name = "selectedSeats") String selectedSeats,
                        @RequestParam(name = "clientId") Long clientId,
+                       @RequestParam(name = "defaultCategoryId", required = false) Long defaultCategoryId,
                        RedirectAttributes redirectAttributes) {
         try {
             if (selectedSeats == null || selectedSeats.isEmpty()) {
@@ -119,11 +120,14 @@ public class ReservationBackofficeController {
                     Long placeId = Long.parseLong(parts[0]);
                     Long catId = Long.parseLong(parts[1]);
                     placesWithCategories.put(placeId, catId);
+                } else if (parts.length == 1 && defaultCategoryId != null) {
+                    Long placeId = Long.parseLong(parts[0]);
+                    placesWithCategories.put(placeId, defaultCategoryId);
                 }
             }
 
             if (placesWithCategories.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Format de sélection invalide");
+                redirectAttributes.addFlashAttribute("errorMessage", "Format de sélection invalide. Assurez-vous d'avoir choisi une catégorie pour chaque place ou de définir une catégorie par défaut.");
                 return "redirect:/backoffice/reservations/create?seanceId=" + seanceId;
             }
 

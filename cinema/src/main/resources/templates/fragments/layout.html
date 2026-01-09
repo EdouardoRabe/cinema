@@ -20,11 +20,11 @@
             CinéMax Backoffice
         </a>
         <ul class="nav-links">
-            <li><a th:href="@{/backoffice}" th:classappend="${activePage == 'backoffice'} ? 'active' : ''">Tableau de bord</a></li>
-            <li><a th:href="@{/backoffice/films}">Films</a></li>
-            <li><a th:href="@{/backoffice/seances}">Séances</a></li>
-            <li><a th:href="@{/backoffice/reservations}">Réservations</a></li>
-            <li><a th:href="@{/backoffice/clients}">Clients</a></li>
+            <li><a th:href="@{/backoffice}" th:classappend="${request != null and request.requestURI == '/backoffice'} ? 'active' : ''">Tableau de bord</a></li>
+            <li><a th:href="@{/backoffice/films}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/films')} ? 'active' : ''">Films</a></li>
+            <li><a th:href="@{/backoffice/seances}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/seances')} ? 'active' : ''">Séances</a></li>
+            <li><a th:href="@{/backoffice/reservations}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/reservations')} ? 'active' : ''">Réservations</a></li>
+            <li><a th:href="@{/backoffice/clients}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/clients')} ? 'active' : ''">Clients</a></li>
         </ul>
         <div class="nav-actions">
             <a th:href="@{/}" class="btn btn-outline">Voir le site</a>

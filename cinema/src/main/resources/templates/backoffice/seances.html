@@ -6,8 +6,35 @@
 
     <section class="section">
         <div class="section-header">
-            <h2 class="section-title">Séances à venir</h2>
+            <h2 class="section-title">Séances</h2>
+            <a th:href="@{/backoffice/seances/create}" class="btn btn-primary">Nouvelle séance</a>
         </div>
+
+        <form method="get" th:action="@{/backoffice/seances}" class="filters" style="margin-bottom: 1rem;">
+            <div class="filter-group">
+                <label class="filter-label">Film</label>
+                <select name="filmId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    <option th:each="f : ${films}" th:value="${f.id}" th:text="${f.titre}" th:selected="${selectedFilm == f.id}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Salle</label>
+                <select name="salleId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Toutes</option>
+                    <option th:each="s : ${salles}" th:value="${s.id}" th:text="${s.nom}" th:selected="${selectedSalle == s.id}"></option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date</label>
+                <input type="date" name="date" class="filter-input" th:value="${selectedDate}">
+            </div>
+            <div class="filter-group" style="align-self: end;">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a th:href="@{/backoffice/seances}" class="btn btn-outline">Réinitialiser</a>
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table">
                 <thead>

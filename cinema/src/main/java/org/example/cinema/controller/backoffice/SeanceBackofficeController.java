@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -36,8 +37,20 @@ public class SeanceBackofficeController {
     }
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("seances", seanceService.findUpcoming());
+    public String list(@RequestParam(name = "filmId", required = false) Long filmId,
+                       @RequestParam(name = "salleId", required = false) Long salleId,
+                       @RequestParam(name = "date", required = false) String dateStr,
+                       Model model) {
+        java.time.LocalDate date = null;
+        if (dateStr != null && !dateStr.isBlank()) {
+            date = java.time.LocalDate.parse(dateStr);
+        }
+        model.addAttribute("seances", seanceService.findWithFilters(filmId, salleId, date));
+        model.addAttribute("films", filmService.findAll());
+        model.addAttribute("salles", salleService.findAll());
+        model.addAttribute("selectedFilm", filmId);
+        model.addAttribute("selectedSalle", salleId);
+        model.addAttribute("selectedDate", dateStr);
         return "backoffice/seances";
     }
 
