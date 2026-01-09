@@ -50,7 +50,7 @@ public class SeanceBackofficeController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model) {
+    public String edit(@PathVariable("id") Long id, Model model) {
         var sOpt = seanceService.findById(id);
         if (sOpt.isEmpty()) return "redirect:/backoffice/seances";
         model.addAttribute("seance", sOpt.get());
@@ -72,7 +72,7 @@ public class SeanceBackofficeController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             seanceService.deleteById(id);
             redirectAttributes.addFlashAttribute("successMessage", "Séance supprimée");
@@ -83,7 +83,7 @@ public class SeanceBackofficeController {
     }
 
     @GetMapping("/view/{id}")
-    public String view(@PathVariable Long id, Model model) {
+    public String view(@PathVariable("id") Long id, Model model) {
         var seanceOpt = seanceService.findById(id);
         if (seanceOpt.isEmpty()) {
             return "redirect:/backoffice/seances";

@@ -86,7 +86,7 @@ public class FilmBackofficeController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model, RedirectAttributes ra) {
+    public String edit(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         var filmOpt = filmService.findById(id);
         if (filmOpt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Film introuvable");
@@ -102,14 +102,14 @@ public class FilmBackofficeController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes ra) {
         filmService.deleteById(id);
         ra.addFlashAttribute("successMessage", "Film supprimé");
         return "redirect:/backoffice/films";
     }
 
     @GetMapping("/view/{id}")
-    public String view(@PathVariable Long id, Model model, RedirectAttributes ra) {
+    public String view(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         var filmOpt = filmService.findById(id);
         if (filmOpt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Film introuvable");

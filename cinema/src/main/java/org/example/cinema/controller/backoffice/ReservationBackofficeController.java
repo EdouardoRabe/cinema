@@ -54,7 +54,7 @@ public class ReservationBackofficeController {
     }
 
     @PostMapping("/change-status/{id}")
-    public String changeStatus(@PathVariable Long id, @RequestParam Long statutId, RedirectAttributes redirectAttributes) {
+    public String changeStatus(@PathVariable("id") Long id, @RequestParam(name = "statutId") Long statutId, RedirectAttributes redirectAttributes) {
         try {
             reservationService.updateStatus(id, statutId);
             redirectAttributes.addFlashAttribute("successMessage", "Statut mis à jour");
@@ -65,7 +65,7 @@ public class ReservationBackofficeController {
     }
 
     @GetMapping("/create")
-    public String create(@RequestParam(required = false) Long seanceId, Model model) {
+    public String create(@RequestParam(name = "seanceId", required = false) Long seanceId, Model model) {
         List<Client> clients = clientService.findAll();
         model.addAttribute("clients", clients);
 
@@ -94,9 +94,9 @@ public class ReservationBackofficeController {
     }
 
     @PostMapping("/save")
-    public String save(@RequestParam Long seanceId,
-                       @RequestParam String selectedSeats,
-                       @RequestParam Long clientId,
+    public String save(@RequestParam(name = "seanceId") Long seanceId,
+                       @RequestParam(name = "selectedSeats") String selectedSeats,
+                       @RequestParam(name = "clientId") Long clientId,
                        RedirectAttributes redirectAttributes) {
         try {
             if (selectedSeats == null || selectedSeats.isEmpty()) {
@@ -151,13 +151,15 @@ public class ReservationBackofficeController {
     }
 
     @GetMapping("/view/{id}")
-    public String view(@PathVariable Long id, Model model, RedirectAttributes ra) {
+    public String view(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         var opt = reservationService.findById(id);
         if (opt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Réservation introuvable");
             return "redirect:/backoffice/reservations";
         }
-        model.addAttribute("reservation", opt.get());
+        var reservation = opt.get();
+        model.addAttribute("reservation", reservation);
+        model.addAttribute("history", reservationService.getHistoryForReservation(reservation.getId()));
         return "backoffice/reservation-view";
     }
 }

@@ -27,7 +27,7 @@
                         <td th:text="${r.montantTotal}">0</td>
                         <td>
                             <form th:action="@{/backoffice/reservations/change-status/{id}(id=${r.id})}" method="post">
-                                <select name="statutId">
+                                <select name="statutId"  class="form-input">
                                     <option th:each="s : ${statuts}" th:value="${s.id}" th:text="${s.libelle}" th:selected="${r.statut != null and r.statut.id == s.id}">Statut</option>
                                 </select>
                                 <button type="submit" class="btn btn-primary btn-sm">OK</button>

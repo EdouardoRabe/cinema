@@ -29,6 +29,21 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <h4>Historique des statuts</h4>
+                <table class="table">
+                    <thead>
+                        <tr><th>Date</th><th>Statut</th><th>Par</th><th>Commentaire</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="h : ${history}">
+                            <td th:text="${#temporals.format(h.dateChangement, 'dd/MM/yyyy HH:mm')}">01/01/2026 12:00</td>
+                            <td th:text="${h.statut != null ? h.statut.libelle : ''}">Creee</td>
+                            <td th:text="${h.changePar != null ? h.changePar.nomComplet : '—'}">Admin</td>
+                            <td th:text="${h.commentaire}">Création</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>

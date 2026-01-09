@@ -17,19 +17,22 @@ public class ReservationService {
     private final StatutTicketRepository statutTicketRepository;
     private final PlaceRepository placeRepository;
     private final TarifService tarifService;
+    private final org.example.cinema.repository.HistoriqueStatutReservationRepository historiqueRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
                                TicketRepository ticketRepository,
                                StatutReservationRepository statutReservationRepository,
                                StatutTicketRepository statutTicketRepository,
                                PlaceRepository placeRepository,
-                               TarifService tarifService) {
+                               TarifService tarifService,
+                               org.example.cinema.repository.HistoriqueStatutReservationRepository historiqueRepository) {
         this.reservationRepository = reservationRepository;
         this.ticketRepository = ticketRepository;
         this.statutReservationRepository = statutReservationRepository;
         this.statutTicketRepository = statutTicketRepository;
         this.placeRepository = placeRepository;
         this.tarifService = tarifService;
+        this.historiqueRepository = historiqueRepository;
     }
 
     public Set<Long> getOccupiedPlaceIds(Long seanceId) {
@@ -103,7 +106,18 @@ public class ReservationService {
         }
 
         reservation.setMontantTotal(total);
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Create initial historique entry
+        HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
+                .reservation(saved)
+                .statut(statutCreee)
+                .changePar(client)
+                .commentaire("Création de la réservation")
+                .build();
+        historiqueRepository.save(h);
+
+        return saved;
     }
 
     public List<Ticket> getTicketsByReservation(Long reservationId) {
@@ -117,6 +131,20 @@ public class ReservationService {
         StatutReservation statut = statutReservationRepository.findById(statutId)
                 .orElseThrow(() -> new RuntimeException("Statut non trouvé"));
         res.setStatut(statut);
-        return reservationRepository.save(res);
+        Reservation saved = reservationRepository.save(res);
+
+        // Insert historique entry (no changePar information for now)
+        HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
+                .reservation(saved)
+                .statut(statut)
+                .commentaire("Changement de statut via backoffice")
+                .build();
+        historiqueRepository.save(h);
+
+        return saved;
+    }
+
+    public java.util.List<HistoriqueStatutReservation> getHistoryForReservation(Long reservationId) {
+        return historiqueRepository.findByReservationIdOrderByDateChangementDesc(reservationId);
     }
 }
