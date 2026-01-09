@@ -1,0 +1,4 @@
+Chiffre d'affaire actuellement(ex:10/01/2026) par seance
+Dans liste seance,affiche la chiffre d'affaire pour chaque seance grace a la reservation dans le back office
+Pour tout reservation quelque soit la statut
+

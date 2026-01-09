@@ -88,24 +88,36 @@ public class ReservationService {
     public List<Reservation> findAll() {
         return reservationRepository.findAll();
     }
+    
 
-    /**
-     * Crée une réservation avec les places sélectionnées.
-     * @param client Le client qui fait la réservation
-     * @param seance La séance réservée
-     * @param placesWithCategories Map de placeId -> categoriePersonneId
-     * @return La réservation créée
-     */
+    public java.math.BigDecimal getChiffreAffairesBySeanceId(Long seanceId) {
+        List<Reservation> reservations = reservationRepository.findBySeanceId(seanceId);
+        return reservations.stream()
+            .map(Reservation::getMontantTotal)
+            .filter(m -> m != null)
+            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+    
+
+    public java.util.Map<Long, java.math.BigDecimal> getChiffreAffairesBySeances(List<Long> seanceIds) {
+        java.util.Map<Long, java.math.BigDecimal> result = new java.util.HashMap<>();
+        for (Long seanceId : seanceIds) {
+            result.put(seanceId, getChiffreAffairesBySeanceId(seanceId));
+        }
+        return result;
+    }
+
+
     @Transactional
     public Reservation createReservation(Client client, Seance seance, Map<Long, Long> placesWithCategories,
                                           Map<Long, CategoriePersonne> categoriesMap) {
-        // Récupérer les statuts
+       
         StatutReservation statutCreee = statutReservationRepository.findByCode("CREEE")
                 .orElseThrow(() -> new RuntimeException("Statut CREEE non trouvé"));
         StatutTicket statutReserve = statutTicketRepository.findByCode("RESERVE")
                 .orElseThrow(() -> new RuntimeException("Statut RESERVE non trouvé"));
 
-        // Créer la réservation
+        
         Reservation reservation = Reservation.builder()
                 .client(client)
                 .seance(seance)
@@ -115,7 +127,7 @@ public class ReservationService {
 
         BigDecimal total = BigDecimal.ZERO;
 
-        // Créer les tickets
+      
         for (Map.Entry<Long, Long> entry : placesWithCategories.entrySet()) {
             Long placeId = entry.getKey();
             Long categorieId = entry.getValue();
@@ -124,7 +136,7 @@ public class ReservationService {
                     .orElseThrow(() -> new RuntimeException("Place non trouvée: " + placeId));
             CategoriePersonne categorie = categoriesMap.get(categorieId);
 
-            // Calculer le prix
+           
             BigDecimal prix = tarifService.findByTypePlaceAndCategorie(
                     place.getTypePlace().getId(), categorieId)
                     .map(t -> t.getPrix())
@@ -146,7 +158,7 @@ public class ReservationService {
         reservation.setMontantTotal(total);
         Reservation saved = reservationRepository.save(reservation);
 
-        // Create initial historique entry
+       
         HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
                 .reservation(saved)
                 .statut(statutCreee)
@@ -171,7 +183,7 @@ public class ReservationService {
         res.setStatut(statut);
         Reservation saved = reservationRepository.save(res);
 
-        // Insert historique entry (no changePar information for now)
+       
         HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
                 .reservation(saved)
                 .statut(statut)

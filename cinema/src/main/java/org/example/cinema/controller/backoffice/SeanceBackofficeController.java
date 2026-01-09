@@ -45,7 +45,14 @@ public class SeanceBackofficeController {
         if (dateStr != null && !dateStr.isBlank()) {
             date = java.time.LocalDate.parse(dateStr);
         }
-        model.addAttribute("seances", seanceService.findWithFilters(filmId, salleId, date));
+        List<Seance> seances = seanceService.findWithFilters(filmId, salleId, date);
+        
+        
+        List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
+        java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService.getChiffreAffairesBySeances(seanceIds);
+        
+        model.addAttribute("seances", seances);
+        model.addAttribute("chiffresAffaires", chiffresAffaires);
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("selectedFilm", filmId);
