@@ -2,18 +2,24 @@ package org.example.cinema.controller;
 
 import jakarta.servlet.http.HttpSession;
 import org.example.cinema.model.Client;
+import org.example.cinema.model.Reservation;
 import org.example.cinema.service.ClientService;
+import org.example.cinema.service.ReservationService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 public class ClientController {
 
     private final ClientService clientService;
+    private final ReservationService reservationService;
 
-    public ClientController(ClientService clientService) {
+    public ClientController(ClientService clientService, ReservationService reservationService) {
         this.clientService = clientService;
+        this.reservationService = reservationService;
     }
 
     @GetMapping("/login")
@@ -127,5 +133,29 @@ public class ClientController {
         }
         model.addAttribute("client", client);
         return "mon-compte";
+    }
+
+    @GetMapping("/mes-reservations")
+    public String mesReservations(HttpSession session, Model model) {
+        Client client = (Client) session.getAttribute("client");
+        if (client == null) {
+            return "redirect:/login?redirect=/mes-reservations";
+        }
+        
+        List<Reservation> reservations = reservationService.findByClientId(client.getId());
+        
+        // Compter les réservations par statut
+        long confirmees = reservations.stream()
+            .filter(r -> r.getStatut() != null && "CONFIRMED".equals(r.getStatut().getCode()))
+            .count();
+        long enAttente = reservations.stream()
+            .filter(r -> r.getStatut() != null && "PENDING".equals(r.getStatut().getCode()))
+            .count();
+        
+        model.addAttribute("client", client);
+        model.addAttribute("reservations", reservations);
+        model.addAttribute("reservationsConfirmees", confirmees);
+        model.addAttribute("reservationsEnAttente", enAttente);
+        return "mes-reservations";
     }
 }

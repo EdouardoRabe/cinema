@@ -28,11 +28,11 @@ public class FilmBackofficeController {
     }
 
     @GetMapping
-    public String list(@RequestParam(required = false) String title,
-                       @RequestParam(required = false, name = "genreId") String genreIdStr,
-                       @RequestParam(required = false) String langue,
-                       @RequestParam(required = false) String dateFrom,
-                       @RequestParam(required = false) String dateTo,
+    public String list(@RequestParam(name = "title", required = false) String title,
+                       @RequestParam(name = "genreId", required = false) String genreIdStr,
+                       @RequestParam(name = "langue", required = false) String langue,
+                       @RequestParam(name = "dateFrom", required = false) String dateFrom,
+                       @RequestParam(name = "dateTo", required = false) String dateTo,
                        Model model) {
         LocalDate from = dateFrom != null && !dateFrom.isEmpty() ? LocalDate.parse(dateFrom) : null;
         LocalDate to = dateTo != null && !dateTo.isEmpty() ? LocalDate.parse(dateTo) : null;

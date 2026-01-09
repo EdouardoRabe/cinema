@@ -30,6 +30,7 @@ public class FilmController {
 
     @GetMapping
     public String listFilms(Model model,
+                            @RequestParam(name = "titre", required = false) String titre,
                             @RequestParam(name = "genre", required = false) Long genre,
                             @RequestParam(name = "langue", required = false) String langue,
                             @RequestParam(name = "date", required = false) String date) {
@@ -39,9 +40,10 @@ public class FilmController {
             filterDate = LocalDate.parse(date);
         }
 
-        // Utilise la méthode avec filtres combinés
-        model.addAttribute("films", filmService.findWithFilters(genre, langue, filterDate));
+        // Utilise la méthode avec filtres combinés incluant le titre
+        model.addAttribute("films", filmService.findWithFilters(titre, genre, langue, filterDate));
         model.addAttribute("genres", genreService.findAll());
+        model.addAttribute("selectedTitre", titre);
         model.addAttribute("selectedGenre", genre);
         model.addAttribute("selectedLangue", langue);
         model.addAttribute("selectedDate", date);

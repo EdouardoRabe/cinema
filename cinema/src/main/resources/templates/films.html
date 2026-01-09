@@ -21,6 +21,10 @@
     <section class="section" style="padding-top: 0;">
         <form th:action="@{/films}" method="get" class="filters">
             <div class="filter-group">
+                <label class="filter-label">Rechercher</label>
+                <input type="text" name="titre" class="filter-input" th:value="${selectedTitre}" placeholder="Titre du film...">
+            </div>
+            <div class="filter-group">
                 <label class="filter-label">Genre</label>
                 <select name="genre" class="filter-select" onchange="this.form.submit()">
                     <option value="">Tous les genres</option>
@@ -39,6 +43,9 @@
             <div class="filter-group">
                 <label class="filter-label">Date</label>
                 <input type="date" name="date" class="filter-input" th:value="${selectedDate}" onchange="this.form.submit()">
+            </div>
+            <div class="filter-group" style="align-self: end;">
+                <button type="submit" class="btn btn-primary">Rechercher</button>
             </div>
         </form>
 

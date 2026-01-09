@@ -47,12 +47,12 @@ public class FilmService {
     /**
      * Recherche de films avec filtres combinés
      */
-    public List<Film> findWithFilters(Long genreId, String langue, LocalDate date) {
-        // backward compatible simple filters (kept) -> delegate to more advanced method if needed
-        if ((genreId == null || genreId == 0) && (langue == null || langue.isBlank()) && date == null) {
+    public List<Film> findWithFilters(String titre, Long genreId, String langue, LocalDate date) {
+        // Si aucun filtre, retourne tous les films
+        if ((titre == null || titre.isBlank()) && (genreId == null || genreId == 0) && (langue == null || langue.isBlank()) && date == null) {
             return findAll();
         }
-        return repository.findWithFilters(null, genreId, langue, date, date);
+        return repository.findWithFilters(titre, genreId, langue, date, date);
     }
 
     /**

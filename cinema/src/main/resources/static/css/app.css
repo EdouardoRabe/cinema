@@ -145,6 +145,22 @@ a {
 /* Filter small tweaks */
 .filter-select, .filter-input { min-width: 200px; }
 
+/* Date input calendar icon styling for dark theme */
+input[type="date"] {
+    color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 50px;
