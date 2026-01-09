@@ -4,7 +4,9 @@ import org.example.cinema.model.StatutReservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StatutReservationRepository extends JpaRepository<StatutReservation, Long> {
-    // additional query methods if needed
+    Optional<StatutReservation> findByCode(String code);
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "film")
@@ -26,5 +28,14 @@ public class Film {
     private Integer ageMin;
 
     private String langueOriginale;
+
+    @ManyToMany
+    @JoinTable(
+        name = "film_genre",
+        joinColumns = @JoinColumn(name = "id_film"),
+        inverseJoinColumns = @JoinColumn(name = "id_genre")
+    )
+    @Builder.Default
+    private Set<Genre> genres = new HashSet<>();
 
 }

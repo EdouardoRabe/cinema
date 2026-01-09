@@ -82,13 +82,14 @@ CREATE INDEX idx_seance_salle_debut
 ON seance(id_salle, debut);
 
 -- ------------------------------
--- PERSONNES
+-- PERSONNES (Clients)
 -- ------------------------------
 CREATE TABLE personne (
     id SERIAL PRIMARY KEY,
     nom_complet TEXT,
     email TEXT UNIQUE,
     telephone TEXT,
+    mot_de_passe TEXT,
     cree_le TIMESTAMPTZ DEFAULT now()
 );
 
@@ -146,7 +147,7 @@ CREATE TABLE ticket (
     id_place INT REFERENCES place(id),
     id_statut INT REFERENCES statut_ticket(id),
     id_categorie_personne INT REFERENCES categorie_personne(id), -- adulte/enfant
-    prix NUMERIC(6,2) NOT NULL,
+    prix NUMERIC(10,2) NOT NULL,
     cree_le TIMESTAMPTZ DEFAULT now(),
     UNIQUE (id_seance, id_place)
 );
@@ -170,7 +171,7 @@ CREATE TABLE tarif_defaut (
     id SERIAL PRIMARY KEY,
     id_type_place INT REFERENCES type_place(id),
     id_categorie_personne INT REFERENCES categorie_personne(id),
-    prix NUMERIC(6,2) NOT NULL
+    prix NUMERIC(10,2) NOT NULL
 );
 
 -- ------------------------------
@@ -181,7 +182,7 @@ CREATE TABLE tarif_seance (
     id_seance INT REFERENCES seance(id),
     id_type_place INT REFERENCES type_place(id),
     id_categorie_personne INT REFERENCES categorie_personne(id),
-    prix NUMERIC(6,2) NOT NULL
+    prix NUMERIC(10,2) NOT NULL
 );
 
 -- ------------------------------

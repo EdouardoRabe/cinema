@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head(${film.titre})}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar('films')}"></nav>
+
+    <!-- Breadcrumb -->
+    <div class="container" style="padding-top: 6rem;">
+        <div class="breadcrumb" style="justify-content: flex-start;">
+            <a th:href="@{/}">Accueil</a>
+            <span>/</span>
+            <a th:href="@{/films}">Films</a>
+            <span>/</span>
+            <span th:text="${film.titre}">Titre</span>
+        </div>
+    </div>
+
+    <!-- Film Detail -->
+    <section class="section" style="padding-top: 2rem;">
+        <div class="film-detail">
+            <div class="film-detail-poster">
+                <div class="film-poster-placeholder" style="aspect-ratio: 2/3; font-size: 6rem;">🎬</div>
+            </div>
+            <div class="film-detail-content">
+                <h1 th:text="${film.titre}">Titre du film</h1>
+                
+                <div class="film-detail-meta">
+                    <div class="meta-item" th:if="${film.dureeMinutes != null}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <span th:text="${film.dureeMinutes + ' minutes'}">120 minutes</span>
+                    </div>
+                    <div class="meta-item" th:if="${film.dateSortie != null}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span th:text="${#temporals.format(film.dateSortie, 'dd MMMM yyyy')}">15 janvier 2026</span>
+                    </div>
+                    <div class="meta-item" th:if="${film.ageMin != null && film.ageMin > 0}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <span th:text="${'Interdit aux moins de ' + film.ageMin + ' ans'}">12+</span>
+                    </div>
+                    <div class="meta-item" th:if="${film.langueOriginale != null}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <span th:text="${film.langueOriginale}">Français</span>
+                    </div>
+                </div>
+
+                <div class="film-genres" th:if="${genres != null && !genres.isEmpty()}">
+                    <span th:each="g : ${genres}" class="genre-tag" th:text="${g.libelle}">Action</span>
+                </div>
+
+                <div class="film-synopsis" th:if="${film.description != null}">
+                    <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Synopsis</h3>
+                    <p th:text="${film.description}">Description du film...</p>
+                </div>
+
+                <a th:href="@{/seances(filmId=${film.id})}" class="btn btn-primary btn-lg mt-4">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                    </svg>
+                    Voir les séances
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Séances du film -->
+    <section class="section" th:if="${seances != null && !seances.isEmpty()}">
+        <div class="section-header">
+            <h2 class="section-title">Prochaines <span>séances</span></h2>
+        </div>
+        <div class="seances-list">
+            <div th:each="seance : ${seances}" class="seance-card">
+                <div class="seance-time">
+                    <div class="time" th:text="${#temporals.format(seance.debut, 'HH:mm')}">14:30</div>
+                    <div class="date" th:text="${#temporals.format(seance.debut, 'EEE dd MMM')}">Ven 15 Jan</div>
+                </div>
+                <div class="seance-details">
+                    <h3 th:text="${seance.salle?.nom ?: 'Salle'}">Salle 1</h3>
+                    <div class="seance-tags">
+                        <span class="tag" th:classappend="${seance.langue == 'VF' ? 'vf' : 'vost'}" th:text="${seance.langue ?: 'VOST'}">VOST</span>
+                    </div>
+                </div>
+                <a th:href="@{/reservation/{id}(id=${seance.id})}" class="btn btn-primary">Réserver</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
