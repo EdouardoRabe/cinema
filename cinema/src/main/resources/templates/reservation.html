@@ -159,7 +159,7 @@
                             th:data-name="${cat.libelle}"
                             th:data-price="${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}"
                             onclick="selectCategory(this)"
-                            style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-card); border: 2px solid transparent; border-radius: 8px; cursor: pointer; color: #fff;">
+                            style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-card); border: 2px solid transparent; border-radius: 8px; cursor: pointer;">
                         <span th:switch="${cat.libelle}" style="display: flex; align-items: center; gap: 0.5rem;">
                             <span th:case="'ADULTE'">👤</span>
                             <span th:case="'ENFANT'">👶</span>

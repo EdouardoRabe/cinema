@@ -296,8 +296,9 @@ a {
 
 .films-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 2rem;
+    /* reduced minimum width to fit more cards and take less space on landing */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
 }
 
 .film-card {
@@ -310,7 +311,7 @@ a {
 }
 
 .film-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
 }
 
@@ -328,7 +329,7 @@ a {
 }
 
 .film-card:hover .film-poster img {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .film-poster-placeholder {
@@ -338,8 +339,14 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
+    font-size: 2.2rem; /* smaller icon on cards */
     color: var(--text-muted);
+}
+
+.film-info .film-title {
+    font-size: 1rem;
+    margin: 0.5rem 0 0.25rem 0;
+    line-height: 1.1;
 }
 
 .film-rating {

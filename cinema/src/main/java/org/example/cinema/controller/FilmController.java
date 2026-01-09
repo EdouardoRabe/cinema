@@ -56,7 +56,8 @@ public class FilmController {
         }
         Film film = filmOpt.get();
         model.addAttribute("film", film);
-        model.addAttribute("genres", genreService.findAll()); // TODO: filter by film
+        // use the genres associated with the film (do not show all genres)
+        model.addAttribute("genres", film.getGenres());
         model.addAttribute("seances", seanceService.findByFilmId(id));
         return "film-detail";
     }
