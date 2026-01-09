@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Controller
@@ -29,10 +30,17 @@ public class FilmController {
 
     @GetMapping
     public String listFilms(Model model,
-                            @RequestParam(required = false) Long genre,
-                            @RequestParam(required = false) String langue,
-                            @RequestParam(required = false) String date) {
-        model.addAttribute("films", filmService.findAll());
+                            @RequestParam(name = "genre", required = false) Long genre,
+                            @RequestParam(name = "langue", required = false) String langue,
+                            @RequestParam(name = "date", required = false) String date) {
+        
+        LocalDate filterDate = null;
+        if (date != null && !date.isEmpty()) {
+            filterDate = LocalDate.parse(date);
+        }
+
+        // Utilise la méthode avec filtres combinés
+        model.addAttribute("films", filmService.findWithFilters(genre, langue, filterDate));
         model.addAttribute("genres", genreService.findAll());
         model.addAttribute("selectedGenre", genre);
         model.addAttribute("selectedLangue", langue);
@@ -41,7 +49,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public String filmDetail(@PathVariable Long id, Model model) {
+    public String filmDetail(@PathVariable("id") Long id, Model model) {
         Optional<Film> filmOpt = filmService.findById(id);
         if (filmOpt.isEmpty()) {
             return "redirect:/films";

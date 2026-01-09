@@ -27,17 +27,17 @@ public class SeanceController {
 
     @GetMapping
     public String listSeances(Model model,
-                              @RequestParam(required = false) Long filmId,
-                              @RequestParam(required = false) Long salleId,
-                              @RequestParam(required = false) String date) {
+                              @RequestParam(name = "filmId", required = false) Long filmId,
+                              @RequestParam(name = "salleId", required = false) Long salleId,
+                              @RequestParam(name = "date", required = false) String date) {
         
+        LocalDate filterDate = null;
         if (date != null && !date.isEmpty()) {
-            model.addAttribute("seances", seanceService.findByDate(LocalDate.parse(date)));
-        } else if (filmId != null) {
-            model.addAttribute("seances", seanceService.findByFilmId(filmId));
-        } else {
-            model.addAttribute("seances", seanceService.findUpcoming());
+            filterDate = LocalDate.parse(date);
         }
+
+        // Utilise la méthode avec tous les filtres combinés
+        model.addAttribute("seances", seanceService.findWithFilters(filmId, salleId, filterDate));
 
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());

@@ -46,6 +46,46 @@ public class SeanceService {
         return repository.findByDateRange(start, end);
     }
 
+    public List<Seance> findBySalleId(Long salleId) {
+        return repository.findBySalleId(salleId, OffsetDateTime.now());
+    }
+
+    public List<Seance> findBySalleIdAndDate(Long salleId, LocalDate date) {
+        ZoneId zone = ZoneId.systemDefault();
+        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        return repository.findBySalleIdAndDateRange(salleId, start, end);
+    }
+
+    public List<Seance> findByFilmIdAndDate(Long filmId, LocalDate date) {
+        ZoneId zone = ZoneId.systemDefault();
+        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        return repository.findByFilmIdAndDateRange(filmId, start, end);
+    }
+
+    public List<Seance> findByFilmIdAndSalleId(Long filmId, Long salleId) {
+        return repository.findByFilmIdAndSalleId(filmId, salleId, OffsetDateTime.now());
+    }
+
+    public List<Seance> findWithFilters(Long filmId, Long salleId, LocalDate date) {
+        if (date != null && salleId != null) {
+            return findBySalleIdAndDate(salleId, date);
+        } else if (date != null && filmId != null) {
+            return findByFilmIdAndDate(filmId, date);
+        } else if (date != null) {
+            return findByDate(date);
+        } else if (filmId != null && salleId != null) {
+            return findByFilmIdAndSalleId(filmId, salleId);
+        } else if (filmId != null) {
+            return findByFilmId(filmId);
+        } else if (salleId != null) {
+            return findBySalleId(salleId);
+        } else {
+            return findUpcoming();
+        }
+    }
+
     public Seance save(Seance seance) {
         return repository.save(seance);
     }

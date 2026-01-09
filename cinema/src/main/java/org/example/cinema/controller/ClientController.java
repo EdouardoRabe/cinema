@@ -17,9 +17,9 @@ public class ClientController {
     }
 
     @GetMapping("/login")
-    public String showLogin(@RequestParam(required = false) String message, 
-                           @RequestParam(required = false) String error,
-                           @RequestParam(required = false) String redirect,
+    public String showLogin(@RequestParam(name = "message", required = false) String message, 
+                           @RequestParam(name = "error", required = false) String error,
+                           @RequestParam(name = "redirect", required = false) String redirect,
                            HttpSession session,
                            Model model) {
         model.addAttribute("message", message);
@@ -32,9 +32,9 @@ public class ClientController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String motDePasse,
-                        @RequestParam(required = false) String redirect,
+    public String login(@RequestParam("email") String email,
+                        @RequestParam("motDePasse") String motDePasse,
+                        @RequestParam(name = "redirect", required = false) String redirect,
                         HttpSession session,
                         Model model) {
         if (clientService.authenticate(email, motDePasse)) {
@@ -60,7 +60,7 @@ public class ClientController {
     }
 
     @GetMapping("/register")
-    public String showRegister(@RequestParam(required = false) String redirect,
+    public String showRegister(@RequestParam(name = "redirect", required = false) String redirect,
                               HttpSession session,
                               Model model) {
         if (redirect != null && !redirect.isEmpty()) {
@@ -71,12 +71,12 @@ public class ClientController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String nomComplet,
-                          @RequestParam String email,
-                          @RequestParam(required = false) String telephone,
-                          @RequestParam String motDePasse,
-                          @RequestParam String confirmMotDePasse,
-                          @RequestParam(required = false) String redirect,
+    public String register(@RequestParam("nomComplet") String nomComplet,
+                          @RequestParam("email") String email,
+                          @RequestParam(name = "telephone", required = false) String telephone,
+                          @RequestParam("motDePasse") String motDePasse,
+                          @RequestParam("confirmMotDePasse") String confirmMotDePasse,
+                          @RequestParam(name = "redirect", required = false) String redirect,
                           HttpSession session,
                           Model model) {
         // Validation
