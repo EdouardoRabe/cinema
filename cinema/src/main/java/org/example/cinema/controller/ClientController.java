@@ -5,6 +5,7 @@ import org.example.cinema.model.Client;
 import org.example.cinema.model.Reservation;
 import org.example.cinema.service.ClientService;
 import org.example.cinema.service.ReservationService;
+import org.example.cinema.service.StatutReservationService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +17,13 @@ public class ClientController {
 
     private final ClientService clientService;
     private final ReservationService reservationService;
+    private final StatutReservationService statutReservationService;
 
-    public ClientController(ClientService clientService, ReservationService reservationService) {
+    public ClientController(ClientService clientService, ReservationService reservationService, 
+                           StatutReservationService statutReservationService) {
         this.clientService = clientService;
         this.reservationService = reservationService;
+        this.statutReservationService = statutReservationService;
     }
 
     @GetMapping("/login")
@@ -136,26 +140,60 @@ public class ClientController {
     }
 
     @GetMapping("/mes-reservations")
-    public String mesReservations(HttpSession session, Model model) {
+    public String mesReservations(
+            @RequestParam(name = "statutId", required = false) Long statutId,
+            @RequestParam(name = "film", required = false) String film,
+            @RequestParam(name = "dateFrom", required = false) String dateFromStr,
+            @RequestParam(name = "dateTo", required = false) String dateToStr,
+            HttpSession session, Model model) {
         Client client = (Client) session.getAttribute("client");
         if (client == null) {
             return "redirect:/login?redirect=/mes-reservations";
         }
         
-        List<Reservation> reservations = reservationService.findByClientId(client.getId());
+        // Parser les dates
+        java.time.LocalDate dateFrom = null;
+        java.time.LocalDate dateTo = null;
+        if (dateFromStr != null && !dateFromStr.isEmpty()) {
+            dateFrom = java.time.LocalDate.parse(dateFromStr);
+        }
+        if (dateToStr != null && !dateToStr.isEmpty()) {
+            dateTo = java.time.LocalDate.parse(dateToStr);
+        }
         
-        // Compter les réservations par statut
-        long confirmees = reservations.stream()
+        // Récupérer les réservations filtrées
+        List<Reservation> reservations;
+        boolean hasFilters = statutId != null || (film != null && !film.isEmpty()) || dateFrom != null || dateTo != null;
+        
+        if (hasFilters) {
+            reservations = reservationService.findByClientIdWithFilters(client.getId(), statutId, film, dateFrom, dateTo);
+        } else {
+            reservations = reservationService.findByClientId(client.getId());
+        }
+        
+        // Compter toutes les réservations (sans filtre) pour les stats
+        List<Reservation> allReservations = reservationService.findByClientId(client.getId());
+        long confirmees = allReservations.stream()
             .filter(r -> r.getStatut() != null && "CONFIRMED".equals(r.getStatut().getCode()))
             .count();
-        long enAttente = reservations.stream()
+        long enAttente = allReservations.stream()
             .filter(r -> r.getStatut() != null && "PENDING".equals(r.getStatut().getCode()))
             .count();
         
+        // Récupérer les statuts pour le filtre
+        model.addAttribute("statuts", statutReservationService.findAll());
         model.addAttribute("client", client);
         model.addAttribute("reservations", reservations);
         model.addAttribute("reservationsConfirmees", confirmees);
         model.addAttribute("reservationsEnAttente", enAttente);
+        model.addAttribute("totalReservations", allReservations.size());
+        
+        // Conserver les valeurs des filtres
+        model.addAttribute("selectedStatutId", statutId);
+        model.addAttribute("selectedFilm", film);
+        model.addAttribute("selectedDateFrom", dateFromStr);
+        model.addAttribute("selectedDateTo", dateToStr);
+        
         return "mes-reservations";
     }
 }

@@ -26,7 +26,7 @@
             <!-- Stats rapides -->
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 2rem; color: var(--gold); font-weight: 700;" th:text="${#lists.size(reservations)}">0</div>
+                    <div style="font-size: 2rem; color: var(--gold); font-weight: 700;" th:text="${totalReservations != null ? totalReservations : #lists.size(reservations)}">0</div>
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">Total réservations</div>
                 </div>
                 <div class="stat-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; text-align: center;">
@@ -37,6 +37,46 @@
                     <div style="font-size: 2rem; color: #ffc107; font-weight: 700;" th:text="${reservationsEnAttente}">0</div>
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">En attente</div>
                 </div>
+            </div>
+            
+            <!-- Filtres multicritères -->
+            <form th:action="@{/mes-reservations}" method="get" class="filters" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <div class="filter-group">
+                    <label class="filter-label">Film</label>
+                    <input type="text" name="film" class="filter-input" placeholder="Rechercher un film..." th:value="${selectedFilm}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Statut</label>
+                    <select name="statutId" class="filter-select">
+                        <option value="">Tous les statuts</option>
+                        <option th:each="statut : ${statuts}" th:value="${statut.id}" th:text="${statut.libelle}" 
+                                th:selected="${selectedStatutId != null and selectedStatutId == statut.id}">Statut</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date du</label>
+                    <input type="date" name="dateFrom" class="filter-input" th:value="${selectedDateFrom}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date au</label>
+                    <input type="date" name="dateTo" class="filter-input" th:value="${selectedDateTo}">
+                </div>
+                <div class="filter-group" style="align-self: end; display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Filtrer
+                    </button>
+                    <a th:href="@{/mes-reservations}" class="btn btn-outline">Réinitialiser</a>
+                </div>
+            </form>
+            
+            <!-- Résultat du filtre -->
+            <div th:if="${selectedStatutId != null or selectedFilm != null or selectedDateFrom != null or selectedDateTo != null}" 
+                 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                <span th:text="${#lists.size(reservations)} + ' résultat(s) trouvé(s)'">X résultats</span>
             </div>
 
             <!-- Liste des réservations -->

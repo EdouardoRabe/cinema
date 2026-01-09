@@ -42,6 +42,44 @@ public class ReservationService {
     public List<Reservation> findByClientId(Long clientId) {
         return reservationRepository.findByClientId(clientId);
     }
+    
+    public List<Reservation> findByClientIdWithFilters(Long clientId, Long statutId, String filmTitre, 
+                                                        java.time.LocalDate dateFrom, java.time.LocalDate dateTo) {
+        // Récupérer toutes les réservations du client
+        List<Reservation> reservations = reservationRepository.findByClientId(clientId);
+        
+        // Filtrer en Java
+        return reservations.stream()
+            .filter(r -> {
+                // Filtre par statut
+                if (statutId != null && (r.getStatut() == null || !statutId.equals(r.getStatut().getId()))) {
+                    return false;
+                }
+                // Filtre par titre de film
+                if (filmTitre != null && !filmTitre.isEmpty()) {
+                    if (r.getSeance() == null || r.getSeance().getFilm() == null ||
+                        !r.getSeance().getFilm().getTitre().toLowerCase().contains(filmTitre.toLowerCase())) {
+                        return false;
+                    }
+                }
+                // Filtre par date de début
+                if (dateFrom != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
+                    java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
+                    if (seanceDate.isBefore(dateFrom)) {
+                        return false;
+                    }
+                }
+                // Filtre par date de fin
+                if (dateTo != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
+                    java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
+                    if (seanceDate.isAfter(dateTo)) {
+                        return false;
+                    }
+                }
+                return true;
+            })
+            .collect(java.util.stream.Collectors.toList());
+    }
 
     public Optional<Reservation> findById(Long id) {
         return reservationRepository.findById(id);

@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.seance JOIN FETCH r.statut WHERE r.client.id = :clientId ORDER BY r.creeLe DESC")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.seance s JOIN FETCH s.film JOIN FETCH r.statut WHERE r.client.id = :clientId ORDER BY r.creeLe DESC")
     List<Reservation> findByClientId(@Param("clientId") Long clientId);
     
     @Query("SELECT r FROM Reservation r JOIN FETCH r.seance JOIN FETCH r.statut WHERE r.seance.id = :seanceId")
