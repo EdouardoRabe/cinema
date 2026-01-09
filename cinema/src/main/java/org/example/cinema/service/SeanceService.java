@@ -5,8 +5,7 @@ import org.example.cinema.repository.SeanceRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,44 +27,41 @@ public class SeanceService {
     }
 
     public List<Seance> findUpcoming() {
-        return repository.findUpcomingSeances(OffsetDateTime.now());
+        return repository.findUpcomingSeances(LocalDateTime.now());
     }
 
     public List<Seance> findUpcoming(int limit) {
-        return repository.findUpcomingSeances(OffsetDateTime.now()).stream().limit(limit).toList();
+        return repository.findUpcomingSeances(LocalDateTime.now()).stream().limit(limit).toList();
     }
 
     public List<Seance> findByFilmId(Long filmId) {
-        return repository.findByFilmIdAndDebutAfter(filmId, OffsetDateTime.now());
+        return repository.findByFilmIdAndDebutAfter(filmId, LocalDateTime.now());
     }
 
     public List<Seance> findByDate(LocalDate date) {
-        ZoneId zone = ZoneId.systemDefault();
-        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
-        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
         return repository.findByDateRange(start, end);
     }
 
     public List<Seance> findBySalleId(Long salleId) {
-        return repository.findBySalleId(salleId, OffsetDateTime.now());
+        return repository.findBySalleId(salleId, LocalDateTime.now());
     }
 
     public List<Seance> findBySalleIdAndDate(Long salleId, LocalDate date) {
-        ZoneId zone = ZoneId.systemDefault();
-        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
-        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
         return repository.findBySalleIdAndDateRange(salleId, start, end);
     }
 
     public List<Seance> findByFilmIdAndDate(Long filmId, LocalDate date) {
-        ZoneId zone = ZoneId.systemDefault();
-        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
-        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
         return repository.findByFilmIdAndDateRange(filmId, start, end);
     }
 
     public List<Seance> findByFilmIdAndSalleId(Long filmId, Long salleId) {
-        return repository.findByFilmIdAndSalleId(filmId, salleId, OffsetDateTime.now());
+        return repository.findByFilmIdAndSalleId(filmId, salleId, LocalDateTime.now());
     }
 
     public List<Seance> findWithFilters(Long filmId, Long salleId, LocalDate date) {

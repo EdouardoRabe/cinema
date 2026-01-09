@@ -3,7 +3,7 @@ package org.example.cinema.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "seance")
@@ -23,9 +23,9 @@ public class Seance {
     private Salle salle;
 
     @Column(nullable = false)
-    private OffsetDateTime debut;
+    private LocalDateTime debut;
 
-    private OffsetDateTime fin;
+    private LocalDateTime fin;
 
     private String langue;
 }

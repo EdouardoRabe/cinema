@@ -5,8 +5,7 @@ import org.example.cinema.repository.FilmRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,9 +35,8 @@ public class FilmService {
     }
 
     public List<Film> findByDate(LocalDate date) {
-        ZoneId zone = ZoneId.systemDefault();
-        OffsetDateTime start = date.atStartOfDay(zone).toOffsetDateTime();
-        OffsetDateTime end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
         return repository.findBySeanceDate(start, end);
     }
 

@@ -60,8 +60,8 @@ CREATE TABLE seance (
     id SERIAL PRIMARY KEY,
     id_film INT REFERENCES film(id),
     id_salle INT REFERENCES salle(id),
-    debut TIMESTAMPTZ NOT NULL,
-    fin TIMESTAMPTZ,
+    debut TIMESTAMP NOT NULL,
+    fin TIMESTAMP,
     langue TEXT,
     cree_le TIMESTAMPTZ DEFAULT now()
 );

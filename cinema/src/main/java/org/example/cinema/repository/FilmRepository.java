@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,7 +19,7 @@ public interface FilmRepository extends JpaRepository<Film, Long>, org.example.c
     List<Film> findByLangue(@Param("langue") String langue);
 
     @Query("SELECT DISTINCT f FROM Film f JOIN Seance s ON s.film = f WHERE s.debut >= :start AND s.debut < :end")
-    List<Film> findBySeanceDate(@Param("start") OffsetDateTime start, @Param("end") OffsetDateTime end);
+    List<Film> findBySeanceDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT DISTINCT f FROM Film f JOIN f.genres g WHERE g.id = :genreId AND LOWER(f.langueOriginale) = LOWER(:langue)")
     List<Film> findByGenreIdAndLangue(@Param("genreId") Long genreId, @Param("langue") String langue);
