@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Connexion')}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar('')}"></nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1>Connexion</h1>
+        <p>Accédez à votre compte pour réserver vos places</p>
+        <div class="breadcrumb">
+            <a th:href="@{/}">Accueil</a>
+            <span>/</span>
+            <span>Connexion</span>
+        </div>
+    </header>
+
+    <!-- Login Form -->
+    <section class="section">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-icon">👤</div>
+                    <h2>Bienvenue</h2>
+                    <p>Connectez-vous pour continuer</p>
+                </div>
+
+                <!-- Message d'information -->
+                <div th:if="${message}" class="alert alert-info">
+                    <span th:text="${message}">Message</span>
+                </div>
+
+                <!-- Message d'erreur -->
+                <div th:if="${error}" class="alert alert-error">
+                    <span th:text="${error}">Erreur</span>
+                </div>
+
+                <form th:action="@{/login}" method="post" class="auth-form">
+                    <input type="hidden" name="redirect" th:value="${redirect}">
+                    <div class="form-group">
+                        <label for="email">Adresse email</label>
+                        <input type="email" id="email" name="email" th:value="${email}" 
+                               placeholder="votre@email.com" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motDePasse">Mot de passe</label>
+                        <input type="password" id="motDePasse" name="motDePasse" 
+                               placeholder="Votre mot de passe" required class="form-input">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        Se connecter
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Pas encore de compte ?</p>
+                    <a th:href="@{/register(redirect=${redirect})}" class="btn btn-outline">Créer un compte</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

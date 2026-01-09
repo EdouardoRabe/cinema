@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Séances')}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar('seances')}"></nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1>Horaires & <span class="text-gold">Séances</span></h1>
+        <p>Consultez les horaires et réservez vos places</p>
+        <div class="breadcrumb">
+            <a th:href="@{/}">Accueil</a>
+            <span>/</span>
+            <span>Séances</span>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <section class="section" style="padding-top: 0;">
+        <form th:action="@{/seances}" method="get" class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Film</label>
+                <select name="filmId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Tous les films</option>
+                    <option th:each="f : ${films}" th:value="${f.id}" th:text="${f.titre}" th:selected="${selectedFilmId == f.id}">Film</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date</label>
+                <input type="date" name="date" class="filter-input" th:value="${selectedDate}" onchange="this.form.submit()">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Salle</label>
+                <select name="salleId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Toutes les salles</option>
+                    <option th:each="s : ${salles}" th:value="${s.id}" th:text="${s.nom}" th:selected="${selectedSalleId == s.id}">Salle</option>
+                </select>
+            </div>
+        </form>
+
+        <!-- Seances List -->
+        <div class="seances-list">
+            <th:block th:each="seance : ${seances}">
+                <div th:insert="~{fragments/layout :: seanceCard(${seance})}"></div>
+            </th:block>
+
+            <!-- Message si aucune séance -->
+            <div th:if="${seances == null || #lists.isEmpty(seances)}" class="empty-state-box">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <p class="empty-state-title">Aucune séance trouvée</p>
+                <p class="empty-state-subtitle">Essayez de modifier vos critères de recherche</p>
+                <a th:href="@{/seances}" class="btn btn-outline mt-3">Réinitialiser les filtres</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

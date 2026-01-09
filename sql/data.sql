@@ -1,0 +1,114 @@
+-- ======================================
+-- DATA.SQL - Données de test CinéMax
+-- Exécuter après script.sql
+-- ======================================
+
+-- Clients de test
+INSERT INTO personne (nom_complet, email, telephone, mot_de_passe) VALUES
+('Jean Dupont', 'jean@test.com', '+261 34 00 000 01', 'test123'),
+('Marie Martin', 'marie@test.com', '+261 34 00 000 02', 'test123'),
+('Admin CinéMax', 'admin@cinemax.mg', '+261 34 00 000 00', 'admin123');
+
+-- Types de place
+INSERT INTO type_place (libelle) VALUES ('STANDARD');
+INSERT INTO type_place (libelle) VALUES ('VIP');
+INSERT INTO type_place (libelle) VALUES ('PMR');
+
+-- Catégories de personne
+INSERT INTO categorie_personne (libelle) VALUES ('ADULTE');
+INSERT INTO categorie_personne (libelle) VALUES ('ENFANT');
+INSERT INTO categorie_personne (libelle) VALUES ('SENIOR');
+
+-- Genres
+INSERT INTO genre (libelle) VALUES ('ACTION');
+INSERT INTO genre (libelle) VALUES ('COMEDIE');
+INSERT INTO genre (libelle) VALUES ('DRAME');
+INSERT INTO genre (libelle) VALUES ('SCIENCE-FICTION');
+INSERT INTO genre (libelle) VALUES ('THRILLER');
+INSERT INTO genre (libelle) VALUES ('ANIMATION');
+INSERT INTO genre (libelle) VALUES ('HORREUR');
+INSERT INTO genre (libelle) VALUES ('FAMILIAL');
+
+-- Films
+INSERT INTO film (titre, description, duree_minutes, date_sortie, age_min, langue_originale) VALUES
+('Inception', 'Un voleur qui s''infiltre dans les rêves des autres pour voler leurs secrets se voit offrir une chance de rédemption.', 148, '2010-07-16', 12, 'EN'),
+('Le Roi Lion', 'L''histoire épique d''un jeune lion qui doit reconquérir son royaume après la trahison de son oncle.', 88, '2019-07-19', 0, 'FR'),
+('Avengers: Endgame', 'Les Avengers restants tentent d''inverser les actions de Thanos et restaurer l''équilibre de l''univers.', 181, '2019-04-26', 12, 'EN'),
+('Parasite', 'Une famille pauvre s''infiltre dans une famille riche avec des conséquences inattendues et dramatiques.', 132, '2019-05-30', 16, 'KO'),
+('Interstellar', 'Une équipe d''explorateurs voyage à travers un trou de ver dans l''espace pour assurer la survie de l''humanité.', 169, '2014-11-07', 10, 'EN'),
+('Spider-Man: No Way Home', 'Peter Parker demande l''aide du Docteur Strange pour faire oublier son identité au monde entier.', 148, '2021-12-15', 12, 'EN');
+
+-- Associations film-genre
+INSERT INTO film_genre (id_film, id_genre) VALUES (1, 4); -- Inception - SF
+INSERT INTO film_genre (id_film, id_genre) VALUES (1, 5); -- Inception - Thriller
+INSERT INTO film_genre (id_film, id_genre) VALUES (2, 6); -- Roi Lion - Animation
+INSERT INTO film_genre (id_film, id_genre) VALUES (2, 8); -- Roi Lion - Familial
+INSERT INTO film_genre (id_film, id_genre) VALUES (3, 1); -- Avengers - Action
+INSERT INTO film_genre (id_film, id_genre) VALUES (3, 4); -- Avengers - SF
+INSERT INTO film_genre (id_film, id_genre) VALUES (4, 3); -- Parasite - Drame
+INSERT INTO film_genre (id_film, id_genre) VALUES (4, 5); -- Parasite - Thriller
+INSERT INTO film_genre (id_film, id_genre) VALUES (5, 4); -- Interstellar - SF
+INSERT INTO film_genre (id_film, id_genre) VALUES (5, 3); -- Interstellar - Drame
+INSERT INTO film_genre (id_film, id_genre) VALUES (6, 1); -- Spider-Man - Action
+INSERT INTO film_genre (id_film, id_genre) VALUES (6, 4); -- Spider-Man - SF
+
+-- Salles
+INSERT INTO salle (nom, capacite) VALUES ('Salle 1 - IMAX', 50);
+INSERT INTO salle (nom, capacite) VALUES ('Salle 2 - Standard', 30);
+INSERT INTO salle (nom, capacite) VALUES ('Salle 3 - VIP', 20);
+
+-- Places Salle 1 (5 rangées x 10 places)
+INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place) 
+SELECT 1, r.rangee, n.numero, r.rangee || n.numero, 
+    CASE WHEN r.rangee = 'E' AND n.numero BETWEEN 4 AND 7 THEN 2 ELSE 1 END
+FROM (VALUES ('A'), ('B'), ('C'), ('D'), ('E')) AS r(rangee)
+CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numero);
+
+-- Places Salle 2 (3 rangées x 10 places)
+INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place) 
+SELECT 2, r.rangee, n.numero, r.rangee || n.numero, 1
+FROM (VALUES ('A'), ('B'), ('C')) AS r(rangee)
+CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numero);
+
+-- Places Salle 3 VIP (2 rangées x 10 places, toutes VIP)
+INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place) 
+SELECT 3, r.rangee, n.numero, r.rangee || n.numero, 2
+FROM (VALUES ('A'), ('B')) AS r(rangee)
+CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numero);
+
+-- Séances (pour les prochains jours)
+INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
+-- Aujourd'hui
+(1, 1, CURRENT_TIMESTAMP + INTERVAL '2 hours', CURRENT_TIMESTAMP + INTERVAL '4 hours 28 minutes', 'VF'),
+(1, 1, CURRENT_TIMESTAMP + INTERVAL '6 hours', CURRENT_TIMESTAMP + INTERVAL '8 hours 28 minutes', 'VOST'),
+(2, 2, CURRENT_TIMESTAMP + INTERVAL '2 hours', CURRENT_TIMESTAMP + INTERVAL '3 hours 28 minutes', 'VF'),
+(2, 2, CURRENT_TIMESTAMP + INTERVAL '5 hours', CURRENT_TIMESTAMP + INTERVAL '6 hours 28 minutes', 'VF'),
+(3, 1, CURRENT_TIMESTAMP + INTERVAL '9 hours', CURRENT_TIMESTAMP + INTERVAL '12 hours 1 minute', 'VOST'),
+(4, 3, CURRENT_TIMESTAMP + INTERVAL '3 hours', CURRENT_TIMESTAMP + INTERVAL '5 hours 12 minutes', 'VOST'),
+-- Demain
+(1, 1, CURRENT_TIMESTAMP + INTERVAL '1 day 2 hours', CURRENT_TIMESTAMP + INTERVAL '1 day 4 hours 28 minutes', 'VF'),
+(2, 2, CURRENT_TIMESTAMP + INTERVAL '1 day 2 hours', CURRENT_TIMESTAMP + INTERVAL '1 day 3 hours 28 minutes', 'VF'),
+(3, 1, CURRENT_TIMESTAMP + INTERVAL '1 day 5 hours', CURRENT_TIMESTAMP + INTERVAL '1 day 8 hours 1 minute', 'VOST'),
+(5, 3, CURRENT_TIMESTAMP + INTERVAL '1 day 3 hours', CURRENT_TIMESTAMP + INTERVAL '1 day 5 hours 49 minutes', 'VOST'),
+(6, 2, CURRENT_TIMESTAMP + INTERVAL '1 day 6 hours', CURRENT_TIMESTAMP + INTERVAL '1 day 8 hours 28 minutes', 'VF'),
+-- Après-demain
+(1, 1, CURRENT_TIMESTAMP + INTERVAL '2 days 2 hours', CURRENT_TIMESTAMP + INTERVAL '2 days 4 hours 28 minutes', 'VOST'),
+(4, 3, CURRENT_TIMESTAMP + INTERVAL '2 days 3 hours', CURRENT_TIMESTAMP + INTERVAL '2 days 5 hours 12 minutes', 'VOST'),
+(5, 1, CURRENT_TIMESTAMP + INTERVAL '2 days 6 hours', CURRENT_TIMESTAMP + INTERVAL '2 days 8 hours 49 minutes', 'VF'),
+(6, 2, CURRENT_TIMESTAMP + INTERVAL '2 days 2 hours', CURRENT_TIMESTAMP + INTERVAL '2 days 4 hours 28 minutes', 'VF'),
+-- Dans 3 jours
+(2, 2, CURRENT_TIMESTAMP + INTERVAL '3 days 2 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 3 hours 28 minutes', 'VF'),
+(3, 1, CURRENT_TIMESTAMP + INTERVAL '3 days 5 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 8 hours 1 minute', 'VF'),
+(4, 3, CURRENT_TIMESTAMP + INTERVAL '3 days 8 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 10 hours 12 minutes', 'VOST');
+
+-- Tarifs par défaut (type_place x categorie_personne)
+INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
+(1, 1, 10000.00),  -- Standard Adulte
+(1, 2, 7000.00),   -- Standard Enfant
+(1, 3, 8000.00),   -- Standard Senior
+(2, 1, 15000.00),  -- VIP Adulte
+(2, 2, 12000.00),  -- VIP Enfant
+(2, 3, 13000.00),  -- VIP Senior
+(3, 1, 10000.00),  -- PMR Adulte
+(3, 2, 7000.00),   -- PMR Enfant
+(3, 3, 8000.00);   -- PMR Senior

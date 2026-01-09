@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Accueil')}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar('home')}"></nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-badge">✨ Expérience cinéma premium</span>
+            <h1>Vivez le cinéma <span>autrement</span></h1>
+            <p>Découvrez les derniers blockbusters, réservez vos places en quelques clics et profitez d'une expérience unique dans nos salles équipées des dernières technologies.</p>
+            <div class="hero-buttons">
+                <a th:href="@{/films}" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Voir les films
+                </a>
+                <a th:href="@{/seances}" class="btn btn-outline">
+                    Consulter les séances
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Films à l'affiche -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Films à <span>l'affiche</span></h2>
+            <a th:href="@{/films}" class="view-all">
+                Voir tout
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        <div class="films-grid">
+            <th:block th:each="film : ${films}">
+                <div th:insert="~{fragments/layout :: filmCard(${film})}"></div>
+            </th:block>
+            <!-- Placeholder si pas de films -->
+            <div th:if="${films == null || #lists.isEmpty(films)}" class="empty-state">
+                <p class="empty-state-title">Aucun film à l'affiche pour le moment</p>
+                <p>Revenez bientôt pour découvrir notre programmation</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prochaines séances -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Prochaines <span>séances</span></h2>
+            <a th:href="@{/seances}" class="view-all">
+                Toutes les séances
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        <div class="seances-list">
+            <th:block th:each="seance : ${seances}">
+                <div th:insert="~{fragments/layout :: seanceCard(${seance})}"></div>
+            </th:block>
+            <!-- Placeholder si pas de séances -->
+            <div th:if="${seances == null || #lists.isEmpty(seances)}" class="empty-state-box">
+                <p class="empty-state-title">Aucune séance programmée</p>
+                <p class="empty-state-subtitle">Revenez bientôt pour découvrir notre programmation</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

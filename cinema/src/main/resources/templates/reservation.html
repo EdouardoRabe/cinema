@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Réservation')}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav th:replace="~{fragments/layout :: navbar('')}"></nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1>Réservation</h1>
+        <p th:text="${seance.film?.titre + ' — ' + #temporals.format(seance.debut, 'EEEE dd MMMM à HH:mm')}">Film — Date</p>
+        <div class="breadcrumb">
+            <a th:href="@{/}">Accueil</a>
+            <span>/</span>
+            <a th:href="@{/seances}">Séances</a>
+            <span>/</span>
+            <span>Réservation</span>
+        </div>
+    </header>
+
+    <!-- Reservation Content -->
+    <section class="section">
+        <form th:action="@{/reservation/confirm}" method="post" onsubmit="return validateReservationForm()">
+            <input type="hidden" name="seanceId" th:value="${seance.id}">
+            <input type="hidden" id="selectedSeats" name="selectedSeats" value="">
+            <input type="hidden" id="selectedCategory" name="categoryId" value="">
+
+            <div class="grid-2">
+                <!-- Seat Selection -->
+                <div>
+                    <h2 class="section-title mb-3">1. Choisissez vos <span>places</span></h2>
+                    
+                    <div class="seat-selection">
+                        <!-- Screen -->
+                        <div class="screen"></div>
+
+                        <!-- Seats -->
+                        <div class="seats-container">
+                            <div th:each="row : ${rows}" class="seat-row">
+                                <span class="row-label" th:text="${row}">A</span>
+                                <div th:each="place : ${placesByRow.get(row)}" 
+                                     class="seat"
+                                     th:classappend="${placesOccupees.contains(place.id)} ? 'taken' : (${place.typePlace?.libelle == 'VIP'} ? 'vip' : '')"
+                                     th:data-id="${place.id}"
+                                     th:data-price="${tarifDefaut != null ? tarifDefaut.intValue() : 10000}"
+                                     th:text="${place.numero}">1</div>
+                                <span class="row-label" th:text="${row}">A</span>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="seat-legend">
+                            <div class="legend-item">
+                                <div class="legend-seat available"></div>
+                                <span>Disponible</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat selected"></div>
+                                <span>Sélectionné</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat taken"></div>
+                                <span>Occupé</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat vip"></div>
+                                <span>VIP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <h2 class="section-title mb-3 mt-4">2. Choisissez votre <span>catégorie</span></h2>
+                    <div class="category-selector">
+                        <div th:each="cat : ${categories}" 
+                             class="category-card"
+                             th:data-id="${cat.id}"
+                             th:data-price="${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}">
+                            <div class="category-icon" th:switch="${cat.libelle}">
+                                <span th:case="'ADULTE'">👤</span>
+                                <span th:case="'ENFANT'">👶</span>
+                                <span th:case="'SENIOR'">👴</span>
+                                <span th:case="*">🎫</span>
+                            </div>
+                            <div class="category-name" th:text="${cat.libelle}">Adulte</div>
+                            <div class="category-price" th:text="${#numbers.formatInteger(tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue(), 1, 'WHITESPACE')} + ' Ar'">10 000 Ar</div>
+                        </div>
+                        <!-- Default categories if none in DB -->
+                        <div th:if="${#lists.isEmpty(categories)}" class="category-card selected" data-id="1" th:data-price="${tarifDefaut.intValue()}">
+                            <div class="category-icon">👤</div>
+                            <div class="category-name">Adulte</div>
+                            <div class="category-price" th:text="${#numbers.formatInteger(tarifDefaut.intValue(), 1, 'WHITESPACE')} + ' Ar'">10 000 Ar</div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(categories)}" class="category-card" data-id="2" data-price="7000">
+                            <div class="category-icon">👶</div>
+                            <div class="category-name">Enfant</div>
+                            <div class="category-price">7 000 Ar</div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(categories)}" class="category-card" data-id="3" data-price="8000">
+                            <div class="category-icon">👴</div>
+                            <div class="category-name">Senior</div>
+                            <div class="category-price">8 000 Ar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div>
+                    <div class="summary-card">
+                        <h3 class="summary-title">Récapitulatif</h3>
+                        
+                        <div class="summary-item">
+                            <span class="label">Film</span>
+                            <span class="value" th:text="${seance.film?.titre ?: 'Film'}">Film</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Date</span>
+                            <span class="value" th:text="${#temporals.format(seance.debut, 'dd/MM/yyyy')}">15/01/2026</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Heure</span>
+                            <span class="value" th:text="${#temporals.format(seance.debut, 'HH:mm')}">14:30</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Salle</span>
+                            <span class="value" th:text="${seance.salle?.nom ?: 'Salle'}">Salle 1</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Places</span>
+                            <span class="value" id="summarySeats">0 place(s)</span>
+                        </div>
+
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span class="amount" id="totalPrice">0 Ar</span>
+                        </div>
+
+                        <div class="summary-actions">
+                            <!-- Si connecté: bouton de confirmation -->
+                            <button th:if="${isConnected}" type="submit" class="btn btn-primary">
+                                Confirmer la réservation
+                            </button>
+                            <!-- Si non connecté: bouton de connexion -->
+                            <div th:unless="${isConnected}" class="login-required">
+                                <p class="login-message">Connectez-vous pour finaliser votre réservation</p>
+                                <a th:href="@{/login(redirect='/reservation/' + ${seance.id})}" class="btn btn-primary">
+                                    Se connecter
+                                </a>
+                                <a th:href="@{/register(redirect='/reservation/' + ${seance.id})}" class="btn btn-outline mt-2">
+                                    Créer un compte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
