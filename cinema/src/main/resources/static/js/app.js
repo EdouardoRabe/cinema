@@ -31,6 +31,15 @@ function initSeatSelection() {
     
     if (!seats.length) return;
 
+    // Si le modal de catégorie existe (page reservation front-office),
+    // on ne fait RIEN ici - la gestion est faite dans le template
+    const hasCategoryModal = document.getElementById('categoryModal');
+    if (hasCategoryModal) {
+        // Ne pas ajouter d'event listeners - le template gère tout
+        return;
+    }
+    
+    // legacy behavior: toggle selection directly (backoffice)
     seats.forEach(seat => {
         seat.addEventListener('click', function() {
             this.classList.toggle('selected');

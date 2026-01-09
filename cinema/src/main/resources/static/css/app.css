@@ -769,6 +769,24 @@ a {
     background: rgba(212, 175, 55, 0.1);
 }
 
+/* modal category option */
+.category-option {
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+}
+
+.category-option:hover {
+    background: var(--bg-hover) !important;
+    border-color: var(--gold) !important;
+    transform: translateY(-2px);
+}
+
+.category-option.selected {
+    border-color: var(--gold) !important;
+    background: rgba(212, 175, 55, 0.1) !important;
+    outline: 2px solid rgba(212,175,55,0.2);
+}
+
 .category-icon {
     font-size: 2rem;
     margin-bottom: 0.75rem;

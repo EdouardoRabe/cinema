@@ -36,7 +36,8 @@ INSERT INTO film (titre, description, duree_minutes, date_sortie, age_min, langu
 ('Avengers: Endgame', 'Les Avengers restants tentent d''inverser les actions de Thanos et restaurer l''équilibre de l''univers.', 181, '2019-04-26', 12, 'EN'),
 ('Parasite', 'Une famille pauvre s''infiltre dans une famille riche avec des conséquences inattendues et dramatiques.', 132, '2019-05-30', 16, 'KO'),
 ('Interstellar', 'Une équipe d''explorateurs voyage à travers un trou de ver dans l''espace pour assurer la survie de l''humanité.', 169, '2014-11-07', 10, 'EN'),
-('Spider-Man: No Way Home', 'Peter Parker demande l''aide du Docteur Strange pour faire oublier son identité au monde entier.', 148, '2021-12-15', 12, 'EN');
+('Spider-Man: No Way Home', 'Peter Parker demande l''aide du Docteur Strange pour faire oublier son identité au monde entier.', 148, '2021-12-15', 12, 'EN'),
+('Avatar: La Voie de l''Eau', 'Jake Sully et Neytiri ont formé une famille et font tout pour rester ensemble. Cependant, ils doivent quitter leur foyer et explorer les régions de Pandora.', 192, '2022-12-14', 12, 'EN');
 
 -- Associations film-genre
 INSERT INTO film_genre (id_film, id_genre) VALUES (1, 4); -- Inception - SF
@@ -51,6 +52,9 @@ INSERT INTO film_genre (id_film, id_genre) VALUES (5, 4); -- Interstellar - SF
 INSERT INTO film_genre (id_film, id_genre) VALUES (5, 3); -- Interstellar - Drame
 INSERT INTO film_genre (id_film, id_genre) VALUES (6, 1); -- Spider-Man - Action
 INSERT INTO film_genre (id_film, id_genre) VALUES (6, 4); -- Spider-Man - SF
+INSERT INTO film_genre (id_film, id_genre) VALUES (7, 1); -- Avatar - Action
+INSERT INTO film_genre (id_film, id_genre) VALUES (7, 4); -- Avatar - SF
+INSERT INTO film_genre (id_film, id_genre) VALUES (7, 3); -- Avatar - Drame
 
 -- Salles
 INSERT INTO salle (nom, capacite) VALUES ('Salle 1 - IMAX', 50);
@@ -99,7 +103,14 @@ INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
 -- Dans 3 jours
 (2, 2, CURRENT_TIMESTAMP + INTERVAL '3 days 2 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 3 hours 28 minutes', 'VF'),
 (3, 1, CURRENT_TIMESTAMP + INTERVAL '3 days 5 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 8 hours 1 minute', 'VF'),
-(4, 3, CURRENT_TIMESTAMP + INTERVAL '3 days 8 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 10 hours 12 minutes', 'VOST');
+(4, 3, CURRENT_TIMESTAMP + INTERVAL '3 days 8 hours', CURRENT_TIMESTAMP + INTERVAL '3 days 10 hours 12 minutes', 'VOST'),
+-- Avatar - Séances
+(7, 1, '2026-01-10 10:00:00', '2026-01-10 13:12:00', 'VF'),  -- 10 janvier 2026 à 10h
+(7, 1, '2026-01-10 15:00:00', '2026-01-10 18:12:00', 'VOST'),
+(7, 3, '2026-01-10 20:00:00', '2026-01-10 23:12:00', 'VOST'),
+(7, 1, '2026-01-11 14:00:00', '2026-01-11 17:12:00', 'VF'),
+(7, 2, '2026-01-11 18:00:00', '2026-01-11 21:12:00', 'VF'),
+(7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST');
 
 -- Tarifs par défaut (type_place x categorie_personne)
 INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES

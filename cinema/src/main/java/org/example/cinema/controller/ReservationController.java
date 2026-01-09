@@ -139,7 +139,7 @@ public class ReservationController {
             }
 
             if (placesWithCategories.isEmpty()) {
-                redirectAttributes.addAttribute("error", "Format de sélection invalide");
+                redirectAttributes.addAttribute("error", "Format de sélection invalide. Assurez-vous d'avoir choisi une catégorie pour chaque place.");
                 return "redirect:/reservation/" + seanceId;
             }
 

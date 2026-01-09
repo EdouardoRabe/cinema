@@ -55,7 +55,6 @@
                                      th:data-id="${place.id}"
                                      th:data-numero="${place.numero}"
                                      th:data-row="${row}"
-                                     th:onclick="${placesOccupees.contains(place.id)} ? '' : 'openCategoryModal(this)'"
                                      th:text="${place.numero}">1</div>
                                 <span class="row-label" th:text="${row}">A</span>
                             </div>
@@ -154,12 +153,12 @@
             
             <div class="category-options" style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div th:each="cat : ${categories}">
-                    <button type="button" class="category-option btn" 
+                    <div class="category-option" 
                             th:data-id="${cat.id}"
                             th:data-name="${cat.libelle}"
                             th:data-price="${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}"
-                            onclick="selectCategory(this)"
                             style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-card); border: 2px solid transparent; border-radius: 8px; cursor: pointer;">
+
                         <span th:switch="${cat.libelle}" style="display: flex; align-items: center; gap: 0.5rem;">
                             <span th:case="'ADULTE'">👤</span>
                             <span th:case="'ENFANT'">👶</span>
@@ -168,13 +167,13 @@
                             <span th:text="${cat.libelle}">Adulte</span>
                         </span>
                         <span th:text="${#numbers.formatInteger(tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue(), 1, 'WHITESPACE')} + ' Ar'" style="color: var(--primary);">10 000 Ar</span>
-                    </button>
+                    </div>
                 </div>
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="button" onclick="closeCategoryModal()" class="btn btn-outline" style="flex: 1;">Annuler</button>
-                <button type="button" id="removeSeatBtn" onclick="removeSeatFromModal()" class="btn" style="flex: 1; background: #ff5252; display: none;">Retirer</button>
+                <button type="button" id="cancelModalBtn" class="btn btn-outline" style="flex: 1;">Annuler</button>
+                <button type="button" id="removeSeatBtn" class="btn" style="flex: 1; background: #ff5252; display: none;">Retirer</button>
             </div>
         </div>
     </div>
@@ -186,33 +185,102 @@
     
     <script th:inline="javascript">
         // Données des catégories depuis la base de données
-        const categoriesData = /*[[${categoriesJson}]]*/ {};
+        var categoriesData = /*[[${categoriesJson}]]*/ {};
         
-        const selectedSeatsMap = {};
+        // Map pour stocker les places sélectionnées
+        var selectedSeatsMap = {};
+        
+        // Attendre que le DOM soit chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            initReservationPage();
+        });
+        
+        function initReservationPage() {
+            // Ajouter les event listeners sur les sièges
+            var seats = document.querySelectorAll('.seat:not(.taken)');
+            for (var i = 0; i < seats.length; i++) {
+                seats[i].addEventListener('click', handleSeatClick);
+            }
+            
+            // Ajouter les event listeners sur les options de catégorie
+            var categoryOptions = document.querySelectorAll('.category-option');
+            for (var j = 0; j < categoryOptions.length; j++) {
+                categoryOptions[j].addEventListener('click', handleCategoryClick);
+            }
+            
+            // Bouton Annuler
+            var cancelBtn = document.getElementById('cancelModalBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeCategoryModal();
+                });
+            }
+            
+            // Bouton Retirer
+            var removeBtn = document.getElementById('removeSeatBtn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeSeatFromModal();
+                });
+            }
+            
+            // Fermer le modal en cliquant en dehors
+            var modal = document.getElementById('categoryModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeCategoryModal();
+                    }
+                });
+            }
+        }
+        
+        function handleSeatClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openCategoryModal(this);
+        }
+        
+        function handleCategoryClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            selectCategory(this);
+        }
         
         function openCategoryModal(seatElement) {
             if (seatElement.classList.contains('taken')) return;
             
-            const placeId = seatElement.dataset.id;
-            const numero = seatElement.dataset.numero;
-            const row = seatElement.dataset.row;
+            var placeId = seatElement.getAttribute('data-id');
+            var numero = seatElement.getAttribute('data-numero');
+            var row = seatElement.getAttribute('data-row');
             
             document.getElementById('modalPlaceId').value = placeId;
-            document.getElementById('modalSeatInfo').textContent = `Place ${row}-${numero}`;
+            document.getElementById('modalSeatInfo').textContent = 'Place ' + row + '-' + numero;
             
             // Afficher le bouton "Retirer" si la place est déjà sélectionnée
-            const removeSeatBtn = document.getElementById('removeSeatBtn');
-            if (selectedSeatsMap[placeId]) {
+            var removeSeatBtn = document.getElementById('removeSeatBtn');
+            var existing = selectedSeatsMap[placeId];
+            if (existing) {
                 removeSeatBtn.style.display = 'block';
                 // Mettre en surbrillance la catégorie actuellement sélectionnée
-                document.querySelectorAll('.category-option').forEach(opt => {
-                    opt.style.borderColor = opt.dataset.id == selectedSeatsMap[placeId].categorieId ? 'var(--primary)' : 'transparent';
-                });
+                var options = document.querySelectorAll('.category-option');
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].getAttribute('data-id') === String(existing.categorieId)) {
+                        options[i].classList.add('selected');
+                    } else {
+                        options[i].classList.remove('selected');
+                    }
+                }
             } else {
                 removeSeatBtn.style.display = 'none';
-                document.querySelectorAll('.category-option').forEach(opt => {
-                    opt.style.borderColor = 'transparent';
-                });
+                var opts = document.querySelectorAll('.category-option');
+                for (var k = 0; k < opts.length; k++) {
+                    opts[k].classList.remove('selected');
+                }
             }
             
             document.getElementById('categoryModal').style.display = 'flex';
@@ -222,113 +290,135 @@
             document.getElementById('categoryModal').style.display = 'none';
         }
         
-        function selectCategory(button) {
-            const placeId = document.getElementById('modalPlaceId').value;
-            const categorieId = button.dataset.id;
-            const categorieName = button.dataset.name;
-            const price = parseInt(button.dataset.price);
-            
+        function selectCategory(element) {
+            var placeId = document.getElementById('modalPlaceId').value;
+            var categorieId = element.getAttribute('data-id');
+            var categorieName = element.getAttribute('data-name');
+            var price = parseInt(element.getAttribute('data-price'));
+
             // Trouver l'élément de la place
-            const seatElement = document.querySelector(`.seat[data-id="${placeId}"]`);
-            const row = seatElement.dataset.row;
-            const numero = seatElement.dataset.numero;
+            var seatElement = document.querySelector('.seat[data-id="' + placeId + '"]');
+            if (!seatElement) {
+                console.error('Seat not found:', placeId);
+                return;
+            }
             
-            // Ajouter ou mettre à jour la sélection
+            var row = seatElement.getAttribute('data-row');
+            var numero = seatElement.getAttribute('data-numero');
+
+            // Ajouter ou mettre à jour la sélection (les places existantes sont PRÉSERVÉES)
             selectedSeatsMap[placeId] = {
-                categorieId: categorieId,
+                categorieId: String(categorieId),
                 categorieName: categorieName,
                 price: price,
                 row: row,
                 numero: numero
             };
-            
+
+            // Visually mark the selected category in the modal
+            var options = document.querySelectorAll('.category-option');
+            for (var i = 0; i < options.length; i++) {
+                options[i].classList.remove('selected');
+            }
+            element.classList.add('selected');
+
             // Marquer le siège comme sélectionné
             seatElement.classList.add('selected');
-            
+
+            // Fermer le modal et mettre à jour le récapitulatif
             closeCategoryModal();
-            updateSummary();
+            updateReservationSummary();
         }
         
         function removeSeatFromModal() {
-            const placeId = document.getElementById('modalPlaceId').value;
+            var placeId = document.getElementById('modalPlaceId').value;
             removeSeat(placeId);
             closeCategoryModal();
         }
         
         function removeSeat(placeId) {
             delete selectedSeatsMap[placeId];
-            const seatElement = document.querySelector(`.seat[data-id="${placeId}"]`);
+            var seatElement = document.querySelector('.seat[data-id="' + placeId + '"]');
             if (seatElement) {
                 seatElement.classList.remove('selected');
             }
-            updateSummary();
+            updateReservationSummary();
         }
         
-        function updateSummary() {
-            const container = document.getElementById('seatsListContainer');
-            const noSeatsMsg = document.getElementById('noSeatsMessage');
-            const summarySeats = document.getElementById('summarySeats');
-            const totalPriceEl = document.getElementById('totalPrice');
-            const selectedSeatsInput = document.getElementById('selectedSeats');
+        function updateReservationSummary() {
+            var container = document.getElementById('seatsListContainer');
+            var noSeatsMsg = document.getElementById('noSeatsMessage');
+            var summarySeats = document.getElementById('summarySeats');
+            var totalPriceEl = document.getElementById('totalPrice');
+            var selectedSeatsInput = document.getElementById('selectedSeats');
             
             // Vider le conteneur
             container.innerHTML = '';
             
-            const seats = Object.entries(selectedSeatsMap);
+            var seatKeys = Object.keys(selectedSeatsMap);
             
-            if (seats.length === 0) {
-                container.appendChild(noSeatsMsg);
-                noSeatsMsg.style.display = 'block';
+            if (seatKeys.length === 0) {
+                container.innerHTML = '<p id="noSeatsMessage" style="color: #aaa; font-style: italic;">Aucune place sélectionnée</p>';
                 summarySeats.textContent = '0 place(s)';
                 totalPriceEl.textContent = '0 Ar';
                 selectedSeatsInput.value = '';
                 return;
             }
             
-            noSeatsMsg.style.display = 'none';
+            var total = 0;
+            var seatsData = [];
             
-            let total = 0;
-            const seatsData = [];
-            
-            seats.forEach(([placeId, data]) => {
+            for (var i = 0; i < seatKeys.length; i++) {
+                var placeId = seatKeys[i];
+                var data = selectedSeatsMap[placeId];
                 total += data.price;
-                seatsData.push(`${placeId}:${data.categorieId}`);
+                seatsData.push(placeId + ':' + data.categorieId);
                 
-                const seatItem = document.createElement('div');
+                var seatItem = document.createElement('div');
                 seatItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-card); border-radius: 8px;';
-                seatItem.innerHTML = `
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <strong>Place ${data.row}-${data.numero}</strong>
-                        <span style="color: #aaa; font-size: 0.85rem;">(${data.categorieName})</span>
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="color: var(--primary);">${data.price.toLocaleString('fr-FR')} Ar</span>
-                        <button type="button" onclick="removeSeat('${placeId}')" style="background: #ff5252; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
-                    </span>
-                `;
+                seatItem.innerHTML = '<span style="display: flex; align-items: center; gap: 0.5rem;"><strong>Place ' + data.row + '-' + data.numero + '</strong><span style="color: #aaa; font-size: 0.85rem;">(' + data.categorieName + ')</span></span><span style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--primary);">' + data.price.toLocaleString('fr-FR') + ' Ar</span><button type="button" data-place-id="' + placeId + '" class="remove-seat-btn" style="background: #ff5252; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button></span>';
                 container.appendChild(seatItem);
-            });
+            }
             
-            summarySeats.textContent = `${seats.length} place(s)`;
+            // Ajouter les event listeners sur les boutons de suppression
+            var removeBtns = container.querySelectorAll('.remove-seat-btn');
+            for (var j = 0; j < removeBtns.length; j++) {
+                removeBtns[j].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var pid = this.getAttribute('data-place-id');
+                    removeSeat(pid);
+                });
+            }
+            
+            summarySeats.textContent = seatKeys.length + ' place(s)';
             totalPriceEl.textContent = total.toLocaleString('fr-FR') + ' Ar';
             selectedSeatsInput.value = seatsData.join(',');
         }
         
         function validateReservationForm() {
-            const selectedSeats = document.getElementById('selectedSeats').value;
+            var selectedSeats = document.getElementById('selectedSeats').value;
             if (!selectedSeats || selectedSeats.trim() === '') {
                 alert('Veuillez sélectionner au moins une place et choisir une catégorie.');
                 return false;
             }
+            // Validate format: each entry must be placeId:categorieId
+            var entries = selectedSeats.split(',');
+            for (var i = 0; i < entries.length; i++) {
+                var e = entries[i].trim();
+                if (e === '') continue;
+                var parts = e.split(':');
+                if (parts.length < 2 || parts[0].trim() === '' || parts[1].trim() === '') {
+                    alert('Format de sélection invalide: assurez-vous d\'avoir choisi une catégorie pour chaque place.');
+                    return false;
+                }
+                if (isNaN(Number(parts[0])) || isNaN(Number(parts[1]))) {
+                    alert('Format de sélection invalide: les identifiants de place et de catégorie doivent être des nombres.');
+                    return false;
+                }
+            }
             return true;
         }
-        
-        // Fermer le modal en cliquant en dehors
-        document.getElementById('categoryModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCategoryModal();
-            }
-        });
     </script>
 </body>
 </html>
