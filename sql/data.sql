@@ -60,6 +60,7 @@ INSERT INTO film_genre (id_film, id_genre) VALUES (7, 3); -- Avatar - Drame
 INSERT INTO salle (nom, capacite) VALUES ('Salle 1 - IMAX', 50);
 INSERT INTO salle (nom, capacite) VALUES ('Salle 2 - Standard', 30);
 INSERT INTO salle (nom, capacite) VALUES ('Salle 3 - VIP', 20);
+INSERT INTO salle (nom, capacite) VALUES ('Salle 4', 100);
 
 -- Places Salle 1 (5 rangées x 10 places)
 INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place) 
@@ -79,6 +80,24 @@ INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place)
 SELECT 3, r.rangee, n.numero, r.rangee || n.numero, 2
 FROM (VALUES ('A'), ('B')) AS r(rangee)
 CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numero);
+
+-- Places Salle 4 : 70 Standard, 20 PMR, 10 VIP
+WITH tp AS (
+    SELECT
+        (SELECT id FROM type_place WHERE libelle = 'STANDARD') AS std_id,
+        (SELECT id FROM type_place WHERE libelle = 'VIP') AS vip_id,
+        (SELECT id FROM type_place WHERE libelle = 'PMR') AS pmr_id
+)
+INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place)
+SELECT 4, r.rangee, n.numero, r.rangee || n.numero,
+       CASE
+           WHEN r.rangee IN ('H','I') THEN tp.pmr_id   -- 20 PMR
+           WHEN r.rangee = 'J' THEN tp.vip_id          -- 10 VIP
+           ELSE tp.std_id                             -- 70 Standard
+       END
+FROM (VALUES ('A'), ('B'), ('C'), ('D'), ('E'), ('F'), ('G'), ('H'), ('I'), ('J')) AS r(rangee)
+CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numero)
+CROSS JOIN tp;
 
 -- Séances (pour les prochains jours)
 INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
@@ -110,33 +129,36 @@ INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
 (7, 3, '2026-01-10 20:00:00', '2026-01-10 23:12:00', 'VOST'),
 (7, 1, '2026-01-11 14:00:00', '2026-01-11 17:12:00', 'VF'),
 (7, 2, '2026-01-11 18:00:00', '2026-01-11 21:12:00', 'VF'),
-(7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST');
+(7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST'),
+-- Nouvelle séance en Salle 4
+(1, (SELECT id FROM salle WHERE nom = 'Salle 4'), CURRENT_TIMESTAMP + INTERVAL '6 hours', CURRENT_TIMESTAMP + INTERVAL '8 hours 30 minutes', 'VF');
 
--- Tarifs par défaut (type_place x categorie_personne)
--- INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
--- (1, 1, 10000.00),  -- Standard Adulte
--- (1, 2, 7000.00),   -- Standard Enfant
--- (1, 3, 8000.00),   -- Standard Senior
--- (2, 1, 15000.00),  -- VIP Adulte
--- (2, 2, 12000.00),  -- VIP Enfant
--- (2, 3, 13000.00),  -- VIP Senior
--- (3, 1, 10000.00),  -- PMR Adulte
--- (3, 2, 7000.00),   -- PMR Enfant
--- (3, 3, 8000.00);   -- PMR Senior
-
--- Tarifs spécifiques pour toutes les séances
--- Standard (type_place=1) : 20 000 Ar pour adulte, enfant, senior
--- Premium/VIP (type_place=2) : 50 000 Ar pour adulte, enfant, senior
+-- Tarifs pour la séance Salle 4 : VIP 100000, PMR 50000, Standard 20000 (toutes catégories)
+WITH tp AS (
+    SELECT id, libelle FROM type_place WHERE libelle IN ('STANDARD', 'VIP', 'PMR')
+), cp AS (
+    SELECT id AS id_categorie_personne FROM categorie_personne
+), target_seance AS (
+    SELECT id AS id_seance
+    FROM seance
+    WHERE id_salle = (SELECT id FROM salle WHERE nom = 'Salle 4')
+    ORDER BY id DESC
+    LIMIT 1
+)
 INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix)
-SELECT s.id, tp.id_type_place, cp.id_categorie_personne,
-             CASE WHEN tp.id_type_place = 2 THEN 50000.00 ELSE 20000.00 END AS prix
-FROM seance s
-CROSS JOIN (VALUES (1), (2)) AS tp(id_type_place)
-CROSS JOIN (VALUES (1), (2), (3)) AS cp(id_categorie_personne)
+SELECT ts.id_seance, tp.id, cp.id_categorie_personne,
+       CASE
+           WHEN tp.libelle = 'VIP' THEN 100000.00
+           WHEN tp.libelle = 'PMR' THEN 50000.00
+           ELSE 20000.00
+       END AS prix
+FROM target_seance ts
+CROSS JOIN tp
+CROSS JOIN cp
 WHERE NOT EXISTS (
-        SELECT 1 FROM tarif_seance ts
-        WHERE ts.id_seance = s.id
-            AND ts.id_type_place = tp.id_type_place
-            AND ts.id_categorie_personne = cp.id_categorie_personne
+        SELECT 1 FROM tarif_seance t2
+        WHERE t2.id_seance = ts.id_seance
+          AND t2.id_type_place = tp.id
+          AND t2.id_categorie_personne = cp.id_categorie_personne
 );
 
