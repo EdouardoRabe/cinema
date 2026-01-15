@@ -59,11 +59,13 @@
                         <td style="color: var(--gold); font-weight: 600;" th:text="${#numbers.formatDecimal(chiffresAffaires[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <td style="color: var(--primary); font-weight: 600;" th:text="${#numbers.formatDecimal(capacitesMax[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <td>
-                            <a th:href="@{/backoffice/seances/view/{id}(id=${seance.id})}" class="btn btn-outline">Voir</a>
-                            <a th:href="@{/backoffice/seances/edit/{id}(id=${seance.id})}" class="btn btn-primary">Éditer</a>
-                            <form th:action="@{/backoffice/seances/delete/{id}(id=${seance.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette séance ?');">
-                                <button type="submit" class="btn btn-danger">Supprimer</button>
-                            </form>
+                            <div class="table-actions">
+                                <a th:href="@{/backoffice/seances/view/{id}(id=${seance.id})}" class="btn btn-outline">Voir</a>
+                                <a th:href="@{/backoffice/seances/edit/{id}(id=${seance.id})}" class="btn btn-primary">Éditer</a>
+                                <form th:action="@{/backoffice/seances/delete/{id}(id=${seance.id})}" method="post" onsubmit="return confirm('Supprimer cette séance ?');">
+                                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

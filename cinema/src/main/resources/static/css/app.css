@@ -804,6 +804,17 @@ input[type="date"]::-ms-reveal {
     margin-right: 0.5rem;
 }
 
+.table .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.table .table-actions form {
+    margin: 0;
+}
+
 .table-lg th, .table-lg td {
     padding: 1.25rem;
     font-size: 1rem;
