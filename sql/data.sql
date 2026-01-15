@@ -149,36 +149,25 @@ INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
 (7, 3, '2026-01-10 20:00:00', '2026-01-10 23:12:00', 'VOST'),
 (7, 1, '2026-01-11 14:00:00', '2026-01-11 17:12:00', 'VF'),
 (7, 2, '2026-01-11 18:00:00', '2026-01-11 21:12:00', 'VF'),
-(7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST'),
--- Nouvelle séance en Salle 4
-(1, (SELECT id FROM salle WHERE nom = 'Salle 4'), CURRENT_TIMESTAMP + INTERVAL '6 hours', CURRENT_TIMESTAMP + INTERVAL '8 hours 30 minutes', 'VF');
+(7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST');
 
--- Tarifs pour la séance Salle 4 : VIP 100000, PMR 50000, Standard 20000 (toutes catégories)
-WITH tp AS (
-    SELECT id, libelle FROM type_place WHERE libelle IN ('STANDARD', 'VIP', 'PMR')
-), cp AS (
-    SELECT id AS id_categorie_personne FROM categorie_personne
-), target_seance AS (
-    SELECT id AS id_seance
-    FROM seance
-    WHERE id_salle = (SELECT id FROM salle WHERE nom = 'Salle 4')
-    ORDER BY id DESC
-    LIMIT 1
-)
-INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix)
-SELECT ts.id_seance, tp.id, cp.id_categorie_personne,
-       CASE
-           WHEN tp.libelle = 'VIP' THEN 100000.00
-           WHEN tp.libelle = 'PMR' THEN 50000.00
-           ELSE 20000.00
-       END AS prix
-FROM target_seance ts
-CROSS JOIN tp
-CROSS JOIN cp
-WHERE NOT EXISTS (
-        SELECT 1 FROM tarif_seance t2
-        WHERE t2.id_seance = ts.id_seance
-          AND t2.id_type_place = tp.id
-          AND t2.id_categorie_personne = cp.id_categorie_personne
-);
+--Tarfis par defaut
+    -- ------------------------------
+    CREATE TABLE tarif_defaut (
+        id SERIAL PRIMARY KEY,
+        id_type_place INT REFERENCES type_place(id),
+        id_categorie_personne INT REFERENCES categorie_personne(id),
+        prix NUMERIC(10,2) NOT NULL
+    );
 
+INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
+(1, 1, 10000),  -- Standard - Adulte
+(1, 2, 10000),   -- Standard - Enfant
+(1, 3, 10000),   -- Standard - Senior
+(2, 1, 30000),  -- VIP - Adulte
+(2, 2, 30000),  -- VIP - Enfant
+(2, 3, 30000),  -- VIP - Senior
+(3, 1, 20000),  -- Premium - Adulte
+(3, 2, 20000),  -- Premium - Enfant
+(3, 3, 20000);   -- Premium - Senior
+  
