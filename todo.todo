@@ -1,1 +1,8 @@
-Comment faire marcher ce projet Spring boot avec la base de donnee postgres?
+
+
+1)Une seule possede des places premium et des places standards
+Une place premium coute 50000 ar
+et une place standard 20000 ar,que ce soit enfant,adulte ou senior
+
+2)Donner la valeur maximale qu'un salle peut generer une diffusion de film
+

@@ -55,6 +55,7 @@
                                      th:data-id="${place.id}"
                                      th:data-numero="${place.numero}"
                                      th:data-row="${row}"
+                                     th:data-type-place="${place.typePlace?.id}"
                                      th:text="${place.numero}">1</div>
                                 <span class="row-label" th:text="${row}">A</span>
                             </div>
@@ -156,7 +157,7 @@
                     <div class="category-option" 
                             th:data-id="${cat.id}"
                             th:data-name="${cat.libelle}"
-                            th:data-price="${tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue()}"
+                            th:data-price="0"
                             style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-card); border: 2px solid transparent; border-radius: 8px; cursor: pointer;">
 
                         <span th:switch="${cat.libelle}" style="display: flex; align-items: center; gap: 0.5rem;">
@@ -166,7 +167,7 @@
                             <span th:case="*">🎫</span>
                             <span th:text="${cat.libelle}">Adulte</span>
                         </span>
-                        <span th:text="${#numbers.formatInteger(tarifsByCat.get(cat.id) != null ? tarifsByCat.get(cat.id).intValue() : tarifDefaut.intValue(), 1, 'WHITESPACE')} + ' Ar'" style="color: var(--primary);">10 000 Ar</span>
+                        <span class="category-price" style="color: var(--primary);">—</span>
                     </div>
                 </div>
             </div>
@@ -186,7 +187,7 @@
     <script th:inline="javascript">
         // Données des catégories depuis la base de données
         var categoriesData = /*[[${categoriesJson}]]*/ {};
-        
+
         // Map pour stocker les places sélectionnées
         var selectedSeatsMap = {};
         
@@ -257,9 +258,29 @@
             var placeId = seatElement.getAttribute('data-id');
             var numero = seatElement.getAttribute('data-numero');
             var row = seatElement.getAttribute('data-row');
+            var typePlaceId = seatElement.getAttribute('data-type-place');
             
             document.getElementById('modalPlaceId').value = placeId;
             document.getElementById('modalSeatInfo').textContent = 'Place ' + row + '-' + numero;
+
+            // Mettre à jour les prix affichés dans le modal selon le type de place sélectionné
+            var optionElements = document.querySelectorAll('.category-option');
+            optionElements.forEach(function(opt) {
+                var catId = opt.getAttribute('data-id');
+                var priceSpan = opt.querySelector('.category-price');
+                var prices = categoriesData[catId] && categoriesData[catId].prices;
+                var price = prices && prices[typePlaceId];
+
+                if (price != null) {
+                    opt.classList.remove('disabled');
+                    opt.setAttribute('data-price', price);
+                    priceSpan.textContent = price.toLocaleString('fr-FR') + ' Ar';
+                } else {
+                    opt.classList.add('disabled');
+                    opt.setAttribute('data-price', '');
+                    priceSpan.textContent = 'Tarif indisponible';
+                }
+            });
             
             // Afficher le bouton "Retirer" si la place est déjà sélectionnée
             var removeSeatBtn = document.getElementById('removeSeatBtn');
@@ -294,6 +315,10 @@
             var placeId = document.getElementById('modalPlaceId').value;
             var categorieId = element.getAttribute('data-id');
             var categorieName = element.getAttribute('data-name');
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+
             var price = parseInt(element.getAttribute('data-price'));
 
             // Trouver l'élément de la place

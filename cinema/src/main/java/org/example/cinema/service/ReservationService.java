@@ -1,12 +1,27 @@
 package org.example.cinema.service;
 
-import org.example.cinema.model.*;
-import org.example.cinema.repository.*;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import org.example.cinema.model.CategoriePersonne;
+import org.example.cinema.model.Client;
+import org.example.cinema.model.HistoriqueStatutReservation;
+import org.example.cinema.model.Place;
+import org.example.cinema.model.Reservation;
+import org.example.cinema.model.Seance;
+import org.example.cinema.model.StatutReservation;
+import org.example.cinema.model.StatutTicket;
+import org.example.cinema.model.Ticket;
+import org.example.cinema.repository.PlaceRepository;
+import org.example.cinema.repository.ReservationRepository;
+import org.example.cinema.repository.StatutReservationRepository;
+import org.example.cinema.repository.StatutTicketRepository;
+import org.example.cinema.repository.TicketRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.*;
 
 @Service
 public class ReservationService {
@@ -20,12 +35,12 @@ public class ReservationService {
     private final org.example.cinema.repository.HistoriqueStatutReservationRepository historiqueRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
-                               TicketRepository ticketRepository,
-                               StatutReservationRepository statutReservationRepository,
-                               StatutTicketRepository statutTicketRepository,
-                               PlaceRepository placeRepository,
-                               TarifService tarifService,
-                               org.example.cinema.repository.HistoriqueStatutReservationRepository historiqueRepository) {
+            TicketRepository ticketRepository,
+            StatutReservationRepository statutReservationRepository,
+            StatutTicketRepository statutTicketRepository,
+            PlaceRepository placeRepository,
+            TarifService tarifService,
+            org.example.cinema.repository.HistoriqueStatutReservationRepository historiqueRepository) {
         this.reservationRepository = reservationRepository;
         this.ticketRepository = ticketRepository;
         this.statutReservationRepository = statutReservationRepository;
@@ -42,43 +57,43 @@ public class ReservationService {
     public List<Reservation> findByClientId(Long clientId) {
         return reservationRepository.findByClientId(clientId);
     }
-    
-    public List<Reservation> findByClientIdWithFilters(Long clientId, Long statutId, String filmTitre, 
-                                                        java.time.LocalDate dateFrom, java.time.LocalDate dateTo) {
+
+    public List<Reservation> findByClientIdWithFilters(Long clientId, Long statutId, String filmTitre,
+            java.time.LocalDate dateFrom, java.time.LocalDate dateTo) {
         // Récupérer toutes les réservations du client
         List<Reservation> reservations = reservationRepository.findByClientId(clientId);
-        
+
         // Filtrer en Java
         return reservations.stream()
-            .filter(r -> {
-                // Filtre par statut
-                if (statutId != null && (r.getStatut() == null || !statutId.equals(r.getStatut().getId()))) {
-                    return false;
-                }
-                // Filtre par titre de film
-                if (filmTitre != null && !filmTitre.isEmpty()) {
-                    if (r.getSeance() == null || r.getSeance().getFilm() == null ||
-                        !r.getSeance().getFilm().getTitre().toLowerCase().contains(filmTitre.toLowerCase())) {
+                .filter(r -> {
+                    // Filtre par statut
+                    if (statutId != null && (r.getStatut() == null || !statutId.equals(r.getStatut().getId()))) {
                         return false;
                     }
-                }
-                // Filtre par date de début
-                if (dateFrom != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
-                    java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
-                    if (seanceDate.isBefore(dateFrom)) {
-                        return false;
+                    // Filtre par titre de film
+                    if (filmTitre != null && !filmTitre.isEmpty()) {
+                        if (r.getSeance() == null || r.getSeance().getFilm() == null ||
+                                !r.getSeance().getFilm().getTitre().toLowerCase().contains(filmTitre.toLowerCase())) {
+                            return false;
+                        }
                     }
-                }
-                // Filtre par date de fin
-                if (dateTo != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
-                    java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
-                    if (seanceDate.isAfter(dateTo)) {
-                        return false;
+                    // Filtre par date de début
+                    if (dateFrom != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
+                        java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
+                        if (seanceDate.isBefore(dateFrom)) {
+                            return false;
+                        }
                     }
-                }
-                return true;
-            })
-            .collect(java.util.stream.Collectors.toList());
+                    // Filtre par date de fin
+                    if (dateTo != null && r.getSeance() != null && r.getSeance().getDebut() != null) {
+                        java.time.LocalDate seanceDate = r.getSeance().getDebut().toLocalDate();
+                        if (seanceDate.isAfter(dateTo)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public Optional<Reservation> findById(Long id) {
@@ -88,16 +103,14 @@ public class ReservationService {
     public List<Reservation> findAll() {
         return reservationRepository.findAll();
     }
-    
 
     public java.math.BigDecimal getChiffreAffairesBySeanceId(Long seanceId) {
         List<Reservation> reservations = reservationRepository.findBySeanceId(seanceId);
         return reservations.stream()
-            .map(Reservation::getMontantTotal)
-            .filter(m -> m != null)
-            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                .map(Reservation::getMontantTotal)
+                .filter(m -> m != null)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
     }
-    
 
     public java.util.Map<Long, java.math.BigDecimal> getChiffreAffairesBySeances(List<Long> seanceIds) {
         java.util.Map<Long, java.math.BigDecimal> result = new java.util.HashMap<>();
@@ -107,17 +120,15 @@ public class ReservationService {
         return result;
     }
 
-
     @Transactional
     public Reservation createReservation(Client client, Seance seance, Map<Long, Long> placesWithCategories,
-                                          Map<Long, CategoriePersonne> categoriesMap) {
-       
+            Map<Long, CategoriePersonne> categoriesMap) {
+
         StatutReservation statutCreee = statutReservationRepository.findByCode("CREEE")
                 .orElseThrow(() -> new RuntimeException("Statut CREEE non trouvé"));
         StatutTicket statutReserve = statutTicketRepository.findByCode("RESERVE")
                 .orElseThrow(() -> new RuntimeException("Statut RESERVE non trouvé"));
 
-        
         Reservation reservation = Reservation.builder()
                 .client(client)
                 .seance(seance)
@@ -127,7 +138,6 @@ public class ReservationService {
 
         BigDecimal total = BigDecimal.ZERO;
 
-      
         for (Map.Entry<Long, Long> entry : placesWithCategories.entrySet()) {
             Long placeId = entry.getKey();
             Long categorieId = entry.getValue();
@@ -136,11 +146,12 @@ public class ReservationService {
                     .orElseThrow(() -> new RuntimeException("Place non trouvée: " + placeId));
             CategoriePersonne categorie = categoriesMap.get(categorieId);
 
-           
-            BigDecimal prix = tarifService.findByTypePlaceAndCategorie(
-                    place.getTypePlace().getId(), categorieId)
-                    .map(t -> t.getPrix())
-                    .orElse(tarifService.getTarifDefautAdulte());
+            BigDecimal prix = tarifService.findTarifForSeanceOrDefault(
+                    seance.getId(),
+                    place.getTypePlace().getId(),
+                    categorieId)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Aucun tarif disponible pour cette séance/type de place/catégorie"));
 
             Ticket ticket = Ticket.builder()
                     .reservation(reservation)
@@ -158,7 +169,6 @@ public class ReservationService {
         reservation.setMontantTotal(total);
         Reservation saved = reservationRepository.save(reservation);
 
-       
         HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
                 .reservation(saved)
                 .statut(statutCreee)
@@ -183,7 +193,6 @@ public class ReservationService {
         res.setStatut(statut);
         Reservation saved = reservationRepository.save(res);
 
-       
         HistoriqueStatutReservation h = HistoriqueStatutReservation.builder()
                 .reservation(saved)
                 .statut(statut)

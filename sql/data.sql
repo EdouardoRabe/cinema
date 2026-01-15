@@ -113,13 +113,29 @@ INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
 (7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST');
 
 -- Tarifs par défaut (type_place x categorie_personne)
-INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
-(1, 1, 10000.00),  -- Standard Adulte
-(1, 2, 7000.00),   -- Standard Enfant
-(1, 3, 8000.00),   -- Standard Senior
-(2, 1, 15000.00),  -- VIP Adulte
-(2, 2, 12000.00),  -- VIP Enfant
-(2, 3, 13000.00),  -- VIP Senior
-(3, 1, 10000.00),  -- PMR Adulte
-(3, 2, 7000.00),   -- PMR Enfant
-(3, 3, 8000.00);   -- PMR Senior
+-- INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
+-- (1, 1, 10000.00),  -- Standard Adulte
+-- (1, 2, 7000.00),   -- Standard Enfant
+-- (1, 3, 8000.00),   -- Standard Senior
+-- (2, 1, 15000.00),  -- VIP Adulte
+-- (2, 2, 12000.00),  -- VIP Enfant
+-- (2, 3, 13000.00),  -- VIP Senior
+-- (3, 1, 10000.00),  -- PMR Adulte
+-- (3, 2, 7000.00),   -- PMR Enfant
+-- (3, 3, 8000.00);   -- PMR Senior
+
+-- Tarifs spécifiques pour toutes les séances
+-- Standard (type_place=1) : 20 000 Ar pour adulte, enfant, senior
+-- Premium/VIP (type_place=2) : 50 000 Ar pour adulte, enfant, senior
+INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix)
+SELECT s.id, tp.id_type_place, cp.id_categorie_personne,
+             CASE WHEN tp.id_type_place = 2 THEN 50000.00 ELSE 20000.00 END AS prix
+FROM seance s
+CROSS JOIN (VALUES (1), (2)) AS tp(id_type_place)
+CROSS JOIN (VALUES (1), (2), (3)) AS cp(id_categorie_personne)
+WHERE NOT EXISTS (
+        SELECT 1 FROM tarif_seance ts
+        WHERE ts.id_seance = s.id
+            AND ts.id_type_place = tp.id_type_place
+            AND ts.id_categorie_personne = cp.id_categorie_personne
+);

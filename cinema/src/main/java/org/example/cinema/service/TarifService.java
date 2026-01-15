@@ -1,22 +1,26 @@
 package org.example.cinema.service;
 
-import org.example.cinema.model.TarifDefaut;
-import org.example.cinema.repository.TarifDefautRepository;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.example.cinema.model.TarifDefaut;
+import org.example.cinema.model.TarifSeance;
+import org.example.cinema.repository.TarifDefautRepository;
+import org.example.cinema.repository.TarifSeanceRepository;
+import org.springframework.stereotype.Service;
+
 @Service
 public class TarifService {
 
     private final TarifDefautRepository repository;
+    private final TarifSeanceRepository tarifSeanceRepository;
 
-    public TarifService(TarifDefautRepository repository) {
+    public TarifService(TarifDefautRepository repository, TarifSeanceRepository tarifSeanceRepository) {
         this.repository = repository;
+        this.tarifSeanceRepository = tarifSeanceRepository;
     }
 
     public List<TarifDefaut> findAll() {
@@ -28,7 +32,24 @@ public class TarifService {
     }
 
     /**
-     * Retourne une map des tarifs par catégorie de personne pour un type de place donné.
+     * Retourne un tarif spécifique à une séance si présent.
+     */
+    public Optional<TarifSeance> findSeanceTarif(Long seanceId, Long typePlaceId, Long categorieId) {
+        return tarifSeanceRepository.findBySeanceIdAndTypePlaceIdAndCategoriePersonneId(seanceId, typePlaceId,
+                categorieId);
+    }
+
+    /**
+     * Priorité: tarif de séance puis tarif par défaut.
+     */
+    public Optional<BigDecimal> findTarifForSeanceOrDefault(Long seanceId, Long typePlaceId, Long categorieId) {
+        return findSeanceTarif(seanceId, typePlaceId, categorieId).map(TarifSeance::getPrix)
+                .or(() -> findByTypePlaceAndCategorie(typePlaceId, categorieId).map(TarifDefaut::getPrix));
+    }
+
+    /**
+     * Retourne une map des tarifs par catégorie de personne pour un type de place
+     * donné.
      * Clé: ID de la catégorie, Valeur: prix en BigDecimal
      */
     public Map<Long, BigDecimal> getTarifsByCategorieForTypePlace(Long typePlaceId) {
@@ -41,7 +62,8 @@ public class TarifService {
     }
 
     /**
-     * Retourne une map des tarifs par catégorie de personne pour les places STANDARD (id=1).
+     * Retourne une map des tarifs par catégorie de personne pour les places
+     * STANDARD (id=1).
      */
     public Map<Long, BigDecimal> getTarifsStandardByCategorie() {
         return getTarifsByCategorieForTypePlace(1L);
@@ -53,24 +75,25 @@ public class TarifService {
     public BigDecimal getTarifDefautAdulte() {
         return repository.findByTypePlaceIdAndCategoriePersonneId(1L, 1L)
                 .map(TarifDefaut::getPrix)
-                .orElse(new BigDecimal("10000"));
+                .orElseThrow(() -> new IllegalStateException("Tarif par défaut introuvable (type=1, cat=1)"));
     }
 
     /**
-     * Retourne tous les tarifs sous forme de map imbriquée: typePlace -> categorie -> prix
+     * Retourne tous les tarifs sous forme de map imbriquée: typePlace -> categorie
+     * -> prix
      */
     public Map<Long, Map<Long, BigDecimal>> getAllTarifsMap() {
         List<TarifDefaut> allTarifs = repository.findAllWithDetails();
         Map<Long, Map<Long, BigDecimal>> result = new HashMap<>();
-        
+
         for (TarifDefaut tarif : allTarifs) {
             Long typePlaceId = tarif.getTypePlace().getId();
             Long categorieId = tarif.getCategoriePersonne().getId();
-            
+
             result.computeIfAbsent(typePlaceId, k -> new HashMap<>())
-                  .put(categorieId, tarif.getPrix());
+                    .put(categorieId, tarif.getPrix());
         }
-        
+
         return result;
     }
 }
