@@ -139,3 +139,4 @@ WHERE NOT EXISTS (
             AND ts.id_type_place = tp.id_type_place
             AND ts.id_categorie_personne = cp.id_categorie_personne
 );
+

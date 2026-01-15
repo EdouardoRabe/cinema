@@ -40,6 +40,17 @@
                 </div>
             </div>
 
+            <div class="form-section" style="margin-top: 1.5rem;">
+                <h3 style="margin-bottom: 0.75rem;">Tarifs par type de place (appliqués à toutes les catégories)</h3>
+                <p style="color: #aaa; margin-bottom: 1rem;">Saisir le prix pour chaque type de place de cette séance. Le même prix sera appliqué aux catégories (adulte, enfant, senior).</p>
+                <div class="form-grid">
+                    <div class="form-group" th:each="tp : ${typePlaces}">
+                        <label th:text="${tp.libelle}">Type place</label>
+                        <input class="form-input" type="number" min="0" step="100" th:name="${'tarifsTypePlace[' + tp.id + ']'}" th:value="${tarifsExistants[tp.id]}" placeholder="Prix en Ariary" />
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top: 1rem;">
                 <button type="submit" class="btn btn-primary">Enregistrer</button>
                 <a th:href="@{/backoffice/seances}" class="btn btn-outline">Annuler</a>

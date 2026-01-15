@@ -13,4 +13,6 @@ public interface TarifSeanceRepository extends JpaRepository<TarifSeance, Long> 
             Long categoriePersonneId);
 
     List<TarifSeance> findBySeanceId(Long seanceId);
+
+    void deleteBySeanceId(Long seanceId);
 }

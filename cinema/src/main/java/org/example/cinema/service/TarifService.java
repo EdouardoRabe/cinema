@@ -50,7 +50,7 @@ public class TarifService {
 
     /**
      * Retourne, pour chaque type de place, le tarif maximal disponible pour une
-     * séance (priorité tarifs séance, sinon tarifs par défaut).
+     * séance (priorité tarifs séance, sinon tarifs par  défaut).
      */
     public Map<Long, BigDecimal> getMaxTarifByTypePlaceForSeance(Long seanceId) {
         Map<Long, BigDecimal> result = new HashMap<>();

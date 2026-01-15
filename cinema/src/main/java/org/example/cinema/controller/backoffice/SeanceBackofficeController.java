@@ -1,10 +1,18 @@
 package org.example.cinema.controller.backoffice;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.example.cinema.model.Place;
 import org.example.cinema.model.Seance;
+import org.example.cinema.model.TarifSeance;
+import org.example.cinema.model.TypePlace;
+import org.example.cinema.repository.TarifSeanceRepository;
+import org.example.cinema.repository.TypePlaceRepository;
+import org.example.cinema.service.CategoriePersonneService;
 import org.example.cinema.service.PlaceService;
 import org.example.cinema.service.ReservationService;
 import org.example.cinema.service.SeanceService;
@@ -26,17 +34,25 @@ public class SeanceBackofficeController {
     private final PlaceService placeService;
     private final ReservationService reservationService;
     private final TarifService tarifService;
+    private final TypePlaceRepository typePlaceRepository;
+    private final TarifSeanceRepository tarifSeanceRepository;
+    private final CategoriePersonneService categoriePersonneService;
 
     private final org.example.cinema.service.FilmService filmService;
     private final org.example.cinema.service.SalleService salleService;
 
     public SeanceBackofficeController(SeanceService seanceService, PlaceService placeService,
             ReservationService reservationService, TarifService tarifService,
+            TypePlaceRepository typePlaceRepository, TarifSeanceRepository tarifSeanceRepository,
+            CategoriePersonneService categoriePersonneService,
             org.example.cinema.service.FilmService filmService, org.example.cinema.service.SalleService salleService) {
         this.seanceService = seanceService;
         this.placeService = placeService;
         this.reservationService = reservationService;
         this.tarifService = tarifService;
+        this.typePlaceRepository = typePlaceRepository;
+        this.tarifSeanceRepository = tarifSeanceRepository;
+        this.categoriePersonneService = categoriePersonneService;
         this.filmService = filmService;
         this.salleService = salleService;
     }
@@ -91,6 +107,8 @@ public class SeanceBackofficeController {
         model.addAttribute("seance", new Seance());
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
+        model.addAttribute("typePlaces", typePlaceRepository.findAll());
+        model.addAttribute("tarifsExistants", Map.of());
         return "backoffice/seance-form";
     }
 
@@ -102,13 +120,67 @@ public class SeanceBackofficeController {
         model.addAttribute("seance", sOpt.get());
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
+        model.addAttribute("typePlaces", typePlaceRepository.findAll());
+        Map<Long, BigDecimal> tarifsExistants = new HashMap<>();
+        for (TarifSeance ts : tarifSeanceRepository.findBySeanceId(id)) {
+            if (ts.getTypePlace() != null && !tarifsExistants.containsKey(ts.getTypePlace().getId())) {
+                tarifsExistants.put(ts.getTypePlace().getId(), ts.getPrix());
+            }
+        }
+        model.addAttribute("tarifsExistants", tarifsExistants);
         return "backoffice/seance-form";
     }
 
     @PostMapping("/save")
-    public String save(Seance seance, RedirectAttributes redirectAttributes) {
+    public String save(Seance seance, @RequestParam Map<String, String> allParams,
+            RedirectAttributes redirectAttributes) {
         try {
             seanceService.save(seance);
+
+            // Supprimer les tarifs existants de la séance (si édition)
+            tarifSeanceRepository.deleteBySeanceId(seance.getId());
+
+            List<TypePlace> typePlaces = typePlaceRepository.findAll();
+            Map<Long, TypePlace> typePlaceMap = new HashMap<>();
+            for (TypePlace tp : typePlaces) {
+                typePlaceMap.put(tp.getId(), tp);
+            }
+
+            var categories = categoriePersonneService.findAll();
+            List<TarifSeance> toSave = new ArrayList<>();
+
+            for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                String key = entry.getKey();
+                if (!key.startsWith("tarifsTypePlace[")) {
+                    continue;
+                }
+                if (key.length() <= "tarifsTypePlace[".length())
+                    continue;
+                String rawId = key.substring("tarifsTypePlace[".length(), key.length() - 1);
+                if (rawId.isBlank())
+                    continue;
+                Long tpId = Long.valueOf(rawId);
+                String value = entry.getValue();
+                if (value == null || value.isBlank())
+                    continue;
+                BigDecimal prix = new BigDecimal(value);
+                TypePlace tp = typePlaceMap.get(tpId);
+                if (tp == null)
+                    continue;
+                for (var cat : categories) {
+                    toSave.add(TarifSeance.builder()
+                            .seance(seance)
+                            .typePlace(tp)
+                            .categoriePersonne(cat)
+                            .prix(prix)
+                            .build());
+                }
+            }
+
+            if (!toSave.isEmpty()) {
+                tarifSeanceRepository.saveAll(toSave);
+            }
+
             redirectAttributes.addFlashAttribute("successMessage", "Séance enregistrée");
             return "redirect:/backoffice/seances";
         } catch (Exception e) {
