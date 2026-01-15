@@ -5,7 +5,8 @@ CREATE DATABASE cinema;
 
 CREATE TABLE type_place (
     id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL
+    libelle TEXT NOT NULL UNIQUE,
+    couleur TEXT DEFAULT '#6c757d'
 );
 
 CREATE TABLE categorie_personne (
@@ -157,20 +158,4 @@ CREATE TABLE film (
         prix NUMERIC(10,2) NOT NULL
     );
 
-    -- ------------------------------
-    -- EXEMPLES STATUTS INITIAUX
-    -- ------------------------------
-    INSERT INTO statut_reservation (code, libelle, est_final) VALUES
-    ('CREEE', 'Creee', false),
-    ('EN_ATTENTE', 'En attente de paiement', false),
-    ('PAYEE', 'Payee', false),
-    ('CONFIRMEE', 'Confirmee', false),
-    ('ANNULEE', 'Annulee', true),
-    ('EXPIREE', 'Expiree', true);
-
-    INSERT INTO statut_ticket (code, libelle, est_final) VALUES
-    ('RESERVE', 'Reserve', false),
-    ('PAYE', 'Paye', false),
-    ('ANNULE', 'Annule', true),
-    ('UTILISE', 'Utilise', true),
-    ('REMBOURSE', 'Rembourse', true);
+  

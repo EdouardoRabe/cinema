@@ -51,17 +51,19 @@
                                 <span class="row-label" th:text="${row}">A</span>
                                 <div th:each="place : ${placesByRow.get(row)}" 
                                      class="seat"
-                                     th:classappend="${placesOccupees.contains(place.id)} ? 'taken' : (${place.typePlace?.libelle == 'VIP'} ? 'vip' : '')"
+                                     th:classappend="${placesOccupees.contains(place.id)} ? 'taken' : ''"
                                      th:data-id="${place.id}"
                                      th:data-numero="${place.numero}"
                                      th:data-row="${row}"
                                      th:data-type-place="${place.typePlace?.id}"
+                                     th:data-type-libelle="${place.typePlace?.libelle}"
+                                     th:style="'border-color: ' + (${place.typePlace?.couleur})"
                                      th:text="${place.numero}">1</div>
                                 <span class="row-label" th:text="${row}">A</span>
                             </div>
                         </div>
 
-                        <!-- Legend -->
+                        <!-- Legend - Dynamique basée sur les types de places -->
                         <div class="seat-legend">
                             <div class="legend-item">
                                 <div class="legend-seat available"></div>
@@ -75,9 +77,10 @@
                                 <div class="legend-seat taken"></div>
                                 <span>Occupé</span>
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-seat vip"></div>
-                                <span>VIP</span>
+                            <!-- Types de places dynamiques -->
+                            <div th:each="tp : ${typePlaces}" class="legend-item">
+                                <div class="legend-seat type-place" th:style="'border-color: ' + (${tp.couleur})"></div>
+                                <span th:text="${tp.libelle}">Type</span>
                             </div>
                         </div>
                     </div>

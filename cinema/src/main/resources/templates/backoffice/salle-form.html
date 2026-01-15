@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle Salle')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Nouvelle <span>Salle</span></h2>
+            <a th:href="@{/backoffice/salles}" class="btn btn-outline">Retour à la liste</a>
+        </div>
+        
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="background: rgba(0, 200, 83, 0.15); border: 1px solid #00c853; color: #00c853; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <strong>✓</strong> <span th:text="${successMessage}">Succès</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <strong>✗</strong> <span th:text="${errorMessage}">Erreur</span>
+        </div>
+
+        <div class="form-card" style="max-width: 600px;">
+            <form th:action="@{/backoffice/salles/create}" method="post">
+                <div class="form-group">
+                    <label class="form-label">Nom de la salle *</label>
+                    <input type="text" name="nom" class="form-input" placeholder="ex: Salle 1, Grande Salle..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Capacité (nombre de places) *</label>
+                    <input type="number" name="capacite" class="form-input" min="1" max="500" placeholder="ex: 100" required>
+                    <small style="color: var(--text-muted);">Toutes les places seront créées avec le type STANDARD</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Places par rangée</label>
+                    <input type="number" name="colonnesParRangee" class="form-input" min="1" max="30" value="10">
+                    <small style="color: var(--text-muted);">Par défaut: 10 places par rangée (A1-A10, B1-B10, etc.)</small>
+                </div>
+                
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">Créer la salle</button>
+                    <a th:href="@{/backoffice/salles}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 8px; max-width: 600px;">
+            <h4 style="color: var(--primary); margin-bottom: 1rem;">💡 Comment ça marche</h4>
+            <ul style="color: var(--text-secondary); line-height: 1.8;">
+                <li>Les places sont créées automatiquement avec des rangées (A, B, C...)</li>
+                <li>Toutes les places sont de type <strong>STANDARD</strong> par défaut</li>
+                <li>Vous pourrez ensuite modifier le type de chaque place (VIP, etc.) depuis la page d'édition</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

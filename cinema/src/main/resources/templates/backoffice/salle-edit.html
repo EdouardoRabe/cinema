@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Éditer Salle')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Gérer <span th:text="${salle.nom}">Salle</span></h2>
+            <a th:href="@{/backoffice/salles}" class="btn btn-outline">Retour à la liste</a>
+        </div>
+        
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="background: rgba(0, 200, 83, 0.15); border: 1px solid #00c853; color: #00c853; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <strong>✓</strong> <span th:text="${successMessage}">Succès</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <strong>✗</strong> <span th:text="${errorMessage}">Erreur</span>
+        </div>
+
+        <div class="grid-2">
+            <!-- Informations de la salle -->
+            <div class="form-card">
+                <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Informations</h3>
+                <form th:action="@{/backoffice/salles/edit/{id}(id=${salle.id})}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Nom de la salle</label>
+                        <input type="text" name="nom" class="form-input" th:value="${salle.nom}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Capacité</label>
+                        <input type="number" name="capacite" class="form-input" th:value="${salle.capacite}" min="1" required>
+                        <small style="color: var(--text-muted);">Note: changer la capacité ne modifie pas les places existantes</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </form>
+            </div>
+            
+            <!-- Légende des types de places -->
+            <div class="form-card">
+                <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Légende des types</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Cliquez sur une place pour changer son type</p>
+                <div class="seat-legend-vertical">
+                    <div th:each="tp : ${typePlaces}" class="legend-item-full">
+                        <div class="legend-seat-full" th:style="'border-color: ' + (${tp.couleur} ?: '#6c757d')"></div>
+                        <span th:text="${tp.libelle}">Type</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plan des places -->
+        <div class="form-card" style="margin-top: 2rem;">
+            <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Plan des places</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                <strong th:text="${#lists.size(places)}">0</strong> places • Cliquez sur une place pour modifier son type
+            </p>
+            
+            <div class="seat-selection">
+                <!-- Screen -->
+                <div class="screen"></div>
+                
+                <!-- Seats -->
+                <div class="seats-container">
+                    <div th:each="row : ${rows}" class="seat-row">
+                        <span class="row-label" th:text="${row}">A</span>
+                        <div th:each="place : ${placesByRow.get(row)}" 
+                             class="seat seat-admin"
+                             th:data-id="${place.id}"
+                             th:data-numero="${place.numero}"
+                             th:data-row="${row}"
+                             th:data-type-id="${place.typePlace?.id}"
+                             th:data-type-libelle="${place.typePlace?.libelle}"
+                             th:style="'border-color: ' + (${place.typePlace?.couleur} ?: '#6c757d')"
+                             th:text="${place.numero}">1</div>
+                        <span class="row-label" th:text="${row}">A</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de sélection de type de place -->
+    <div id="typePlaceModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: var(--bg-dark); padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%;">
+            <h3 style="color: var(--primary); margin-bottom: 1rem;">Changer le type de place</h3>
+            <p id="modalPlaceInfo" style="color: #aaa; margin-bottom: 1.5rem;">Place A-1</p>
+            
+            <input type="hidden" id="modalPlaceId" value="">
+            
+            <div class="type-options" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div th:each="tp : ${typePlaces}">
+                    <div class="type-option" 
+                         th:data-id="${tp.id}"
+                         th:data-libelle="${tp.libelle}"
+                         th:data-couleur="${tp.couleur}"
+                         style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-card); border: 2px solid transparent; border-radius: 8px; cursor: pointer;">
+                        <span style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span class="type-color-indicator" th:style="'display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: ' + (${tp.couleur})"></span>
+                            <span th:text="${tp.libelle}">Type</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" id="cancelModalBtn" class="btn btn-outline" style="flex: 1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <script th:inline="javascript">
+        var salleId = /*[[${salle.id}]]*/ 0;
+        var typePlacesData = /*[[${typePlacesMap}]]*/ {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initSalleEdit();
+        });
+        
+        function initSalleEdit() {
+            // Ajouter les event listeners sur les sièges
+            var seats = document.querySelectorAll('.seat-admin');
+            for (var i = 0; i < seats.length; i++) {
+                seats[i].addEventListener('click', handleSeatClick);
+            }
+            
+            // Ajouter les event listeners sur les options de type
+            var typeOptions = document.querySelectorAll('.type-option');
+            for (var j = 0; j < typeOptions.length; j++) {
+                typeOptions[j].addEventListener('click', handleTypeClick);
+            }
+            
+            // Bouton Annuler
+            var cancelBtn = document.getElementById('cancelModalBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', closeModal);
+            }
+            
+            // Fermer le modal en cliquant en dehors
+            var modal = document.getElementById('typePlaceModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeModal();
+                    }
+                });
+            }
+        }
+        
+        function handleSeatClick(e) {
+            e.preventDefault();
+            var placeId = this.getAttribute('data-id');
+            var row = this.getAttribute('data-row');
+            var numero = this.getAttribute('data-numero');
+            var currentTypeId = this.getAttribute('data-type-id');
+            
+            document.getElementById('modalPlaceId').value = placeId;
+            document.getElementById('modalPlaceInfo').textContent = 'Place ' + row + '-' + numero;
+            
+            // Mettre en surbrillance le type actuel
+            var options = document.querySelectorAll('.type-option');
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].getAttribute('data-id') === currentTypeId) {
+                    options[i].style.borderColor = 'var(--primary)';
+                } else {
+                    options[i].style.borderColor = 'transparent';
+                }
+            }
+            
+            document.getElementById('typePlaceModal').style.display = 'flex';
+        }
+        
+        function handleTypeClick(e) {
+            e.preventDefault();
+            var placeId = document.getElementById('modalPlaceId').value;
+            var typePlaceId = this.getAttribute('data-id');
+            var typePlaceLibelle = this.getAttribute('data-libelle');
+            var typePlaceCouleur = this.getAttribute('data-couleur');
+            
+            // Appel AJAX pour mettre à jour le type de place
+            var formData = new FormData();
+            formData.append('placeId', placeId);
+            formData.append('typePlaceId', typePlaceId);
+            
+            fetch('/backoffice/salles/edit/' + salleId + '/places', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    // Mettre à jour visuellement la place
+                    var seatElement = document.querySelector('.seat-admin[data-id="' + placeId + '"]');
+                    if (seatElement) {
+                        seatElement.style.borderColor = typePlaceCouleur;
+                        seatElement.setAttribute('data-type-id', typePlaceId);
+                        seatElement.setAttribute('data-type-libelle', typePlaceLibelle);
+                    }
+                    closeModal();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(function(error) {
+                alert('Erreur de connexion: ' + error);
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('typePlaceModal').style.display = 'none';
+        }
+    </script>
+    
+    <style>
+        .seat-admin {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .seat-admin:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        .seat-legend-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .legend-item-full {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-hover);
+            border-radius: 8px;
+        }
+        .legend-seat-full {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px 6px 3px 3px;
+            background: var(--bg-card);
+            border: 3px solid #6c757d;
+        }
+        .type-option:hover {
+            background: var(--bg-hover) !important;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Salles')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Salles</h2>
+            <a th:href="@{/backoffice/salles/create}" class="btn btn-primary">Nouvelle salle</a>
+        </div>
+        
+        <!-- Messages de succès -->
+        <div th:if="${successMessage}" class="alert alert-success" style="background: rgba(0, 200, 83, 0.15); border: 1px solid #00c853; color: #00c853; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span th:text="${successMessage}">Succès</span>
+        </div>
+        
+        <!-- Message d'erreur -->
+        <div th:if="${errorMessage}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <span th:text="${errorMessage}">Erreur</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Capacité</th>
+                        <th>Places créées</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="salle : ${salles}">
+                        <td th:text="${salle.id}">1</td>
+                        <td th:text="${salle.nom}">Salle 1</td>
+                        <td th:text="${salle.capacite}">100</td>
+                        <td th:text="${placesCount[salle.id]}">100</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{/backoffice/salles/edit/{id}(id=${salle.id})}" class="btn btn-primary">Gérer les places</a>
+                                <a th:href="@{/backoffice/salles/delete/{id}(id=${salle.id})}" 
+                                   class="btn btn-danger"
+                                   onclick="return confirm('Supprimer cette salle et toutes ses places ?');">Supprimer</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(salles)}">
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            Aucune salle trouvée. <a th:href="@{/backoffice/salles/create}" style="color: var(--primary);">Créer une salle</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

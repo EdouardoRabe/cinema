@@ -12,6 +12,9 @@ public class TypePlace {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String libelle;
+    
+    @Column(name = "couleur")
+    private String couleur; // Couleur CSS (ex: #FFD700, gold, etc.)
 }

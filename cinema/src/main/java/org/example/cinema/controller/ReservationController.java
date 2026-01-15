@@ -14,11 +14,13 @@ import org.example.cinema.model.Client;
 import org.example.cinema.model.Place;
 import org.example.cinema.model.Reservation;
 import org.example.cinema.model.Seance;
+import org.example.cinema.model.TypePlace;
 import org.example.cinema.service.CategoriePersonneService;
 import org.example.cinema.service.PlaceService;
 import org.example.cinema.service.ReservationService;
 import org.example.cinema.service.SeanceService;
 import org.example.cinema.service.TarifService;
+import org.example.cinema.service.TypePlaceService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,16 +41,19 @@ public class ReservationController {
     private final CategoriePersonneService categorieService;
     private final TarifService tarifService;
     private final ReservationService reservationService;
+    private final TypePlaceService typePlaceService;
 
     public ReservationController(SeanceService seanceService, PlaceService placeService,
             CategoriePersonneService categorieService,
             TarifService tarifService,
-            ReservationService reservationService) {
+            ReservationService reservationService,
+            TypePlaceService typePlaceService) {
         this.seanceService = seanceService;
         this.placeService = placeService;
         this.categorieService = categorieService;
         this.tarifService = tarifService;
         this.reservationService = reservationService;
+        this.typePlaceService = typePlaceService;
     }
 
     @GetMapping("/{seanceId}")
@@ -66,6 +71,26 @@ public class ReservationController {
 
         // Récupérer les places déjà occupées pour cette séance
         Set<Long> placesOccupees = reservationService.getOccupiedPlaceIds(seanceId);
+        
+        // Récupérer tous les types de places pour la légende dynamique (dedup en base)
+        List<TypePlace> typePlacesRaw = typePlaceService.findAll();
+        java.util.Map<String, TypePlace> uniqueTypes = new java.util.LinkedHashMap<>();
+        for (TypePlace tp : typePlacesRaw) {
+            if (!uniqueTypes.containsKey(tp.getLibelle())) {
+                if (tp.getCouleur() == null) tp.setCouleur("#6c757d");
+                uniqueTypes.put(tp.getLibelle(), tp);
+            }
+        }
+        List<TypePlace> typePlaces = new java.util.ArrayList<>(uniqueTypes.values());
+        
+        // Créer un JSON pour les types de places avec leurs couleurs
+        Map<Long, Map<String, String>> typePlacesJson = new HashMap<>();
+        for (TypePlace tp : typePlaces) {
+            Map<String, String> data = new HashMap<>();
+            data.put("libelle", tp.getLibelle());
+            data.put("couleur", tp.getCouleur());
+            typePlacesJson.put(tp.getId(), data);
+        }
 
         // Récupérer les tarifs depuis la base de données : priorité tarifs de séance,
         // sinon tarifs par défaut
@@ -104,6 +129,8 @@ public class ReservationController {
         model.addAttribute("placesOccupees", placesOccupees);
         model.addAttribute("categories", categories);
         model.addAttribute("categoriesJson", categoriesJson);
+        model.addAttribute("typePlaces", typePlaces);
+        model.addAttribute("typePlacesJson", typePlacesJson);
         model.addAttribute("client", client);
         model.addAttribute("isConnected", client != null);
 

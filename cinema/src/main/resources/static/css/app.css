@@ -665,9 +665,7 @@ input[type="date"]::-ms-reveal {
     opacity: 0.6;
 }
 
-.seat.vip {
-    border-color: var(--gold);
-}
+/* Les types de places utilisent maintenant border-color dynamique depuis la base de données */
 
 .seat-legend {
     display: flex;
@@ -703,9 +701,10 @@ input[type="date"]::-ms-reveal {
     background: var(--red-accent);
 }
 
-.legend-seat.vip {
+/* Type de place dynamique - utilise border-color inline */
+.legend-seat.type-place {
     background: var(--bg-hover);
-    border: 2px solid var(--gold);
+    border: 3px solid #6c757d;
 }
 
 /* ========================================

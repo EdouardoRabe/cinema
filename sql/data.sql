@@ -3,16 +3,36 @@
 -- Exécuter après script.sql
 -- ======================================
 
+  -- EXEMPLES STATUTS INITIAUX
+    -- ------------------------------
+    INSERT INTO statut_reservation (code, libelle, est_final) VALUES
+    ('CREEE', 'Creee', false),
+    ('EN_ATTENTE', 'En attente de paiement', false),
+    ('PAYEE', 'Payee', false),
+    ('CONFIRMEE', 'Confirmee', false),
+    ('ANNULEE', 'Annulee', true),
+    ('EXPIREE', 'Expiree', true);
+
+    INSERT INTO statut_ticket (code, libelle, est_final) VALUES
+    ('RESERVE', 'Reserve', false),
+    ('PAYE', 'Paye', false),
+    ('ANNULE', 'Annule', true),
+    ('UTILISE', 'Utilise', true),
+    ('REMBOURSE', 'Rembourse', true);    
+    -- ------------------------------
+    -- TYPES DE PLACES AVEC COULEURS
+    -- ------------------------------
+    INSERT INTO type_place (libelle, couleur) VALUES
+    ('STANDARD', '#6c757d'),
+    ('VIP', '#FFD700'),
+    ('PREMIUM', '#9B59B6');
+
+
 -- Clients de test
 INSERT INTO personne (nom_complet, email, telephone, mot_de_passe) VALUES
 ('Jean Dupont', 'jean@test.com', '+261 34 00 000 01', 'test123'),
 ('Marie Martin', 'marie@test.com', '+261 34 00 000 02', 'test123'),
 ('Admin CinéMax', 'admin@cinemax.mg', '+261 34 00 000 00', 'admin123');
-
--- Types de place
-INSERT INTO type_place (libelle) VALUES ('STANDARD');
-INSERT INTO type_place (libelle) VALUES ('VIP');
-INSERT INTO type_place (libelle) VALUES ('PMR');
 
 -- Catégories de personne
 INSERT INTO categorie_personne (libelle) VALUES ('ADULTE');
