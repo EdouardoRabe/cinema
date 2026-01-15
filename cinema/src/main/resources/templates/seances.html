@@ -28,8 +28,12 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label class="filter-label">Date</label>
-                <input type="date" name="date" class="filter-input" th:value="${selectedDate}" onchange="this.form.submit()">
+                <label class="filter-label">Date du</label>
+                <input type="date" name="dateFrom" class="filter-input" th:value="${selectedDateFrom}" onchange="this.form.submit()">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date au</label>
+                <input type="date" name="dateTo" class="filter-input" th:value="${selectedDateTo}" onchange="this.form.submit()">
             </div>
             <div class="filter-group">
                 <label class="filter-label">Salle</label>

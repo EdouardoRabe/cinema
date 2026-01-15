@@ -29,21 +29,27 @@ public class SeanceController {
     public String listSeances(Model model,
                               @RequestParam(name = "filmId", required = false) Long filmId,
                               @RequestParam(name = "salleId", required = false) Long salleId,
-                              @RequestParam(name = "date", required = false) String date) {
+                              @RequestParam(name = "dateFrom", required = false) String dateFromStr,
+                              @RequestParam(name = "dateTo", required = false) String dateToStr) {
         
-        LocalDate filterDate = null;
-        if (date != null && !date.isEmpty()) {
-            filterDate = LocalDate.parse(date);
+        LocalDate dateFrom = null;
+        LocalDate dateTo = null;
+        if (dateFromStr != null && !dateFromStr.isBlank()) {
+            dateFrom = LocalDate.parse(dateFromStr);
+        }
+        if (dateToStr != null && !dateToStr.isBlank()) {
+            dateTo = LocalDate.parse(dateToStr);
         }
 
-        // Utilise la méthode avec tous les filtres combinés
-        model.addAttribute("seances", seanceService.findWithFilters(filmId, salleId, filterDate));
+        // Utilise la méthode avec tous les filtres combinés (intervalle de dates)
+        model.addAttribute("seances", seanceService.findWithFilters(filmId, salleId, dateFrom, dateTo));
 
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("selectedFilmId", filmId);
         model.addAttribute("selectedSalleId", salleId);
-        model.addAttribute("selectedDate", date);
+        model.addAttribute("selectedDateFrom", dateFromStr);
+        model.addAttribute("selectedDateTo", dateToStr);
         return "seances";
     }
 }

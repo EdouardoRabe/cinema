@@ -64,14 +64,58 @@ public class SeanceService {
         return repository.findByFilmIdAndSalleId(filmId, salleId, LocalDateTime.now());
     }
 
-    public List<Seance> findWithFilters(Long filmId, Long salleId, LocalDate date) {
-        if (date != null && salleId != null) {
-            return findBySalleIdAndDate(salleId, date);
-        } else if (date != null && filmId != null) {
-            return findByFilmIdAndDate(filmId, date);
-        } else if (date != null) {
-            return findByDate(date);
-        } else if (filmId != null && salleId != null) {
+    public List<Seance> findWithFilters(Long filmId, Long salleId, LocalDate dateFrom, LocalDate dateTo) {
+        boolean hasDateFilter = dateFrom != null || dateTo != null;
+        LocalDateTime start = dateFrom != null ? dateFrom.atStartOfDay() : null;
+        LocalDateTime end = dateTo != null ? dateTo.plusDays(1).atStartOfDay() : null;
+
+        // Both dates provided -> use interval queries (results may include past if dates are in past)
+        if (hasDateFilter && start != null && end != null) {
+            if (filmId != null && salleId != null) {
+                return repository.findByFilmIdAndSalleIdAndDateInterval(filmId, salleId, start, end);
+            } else if (filmId != null) {
+                return repository.findByFilmIdAndDateInterval(filmId, start, end);
+            } else if (salleId != null) {
+                return repository.findBySalleIdAndDateInterval(salleId, start, end);
+            } else {
+                return repository.findByDateInterval(start, end);
+            }
+        }
+
+        // Only dateFrom -> all seances from that date
+        if (start != null && end == null) {
+            List<Seance> base;
+            if (filmId != null && salleId != null) {
+                base = repository.findByFilmIdAndSalleIdAll(filmId, salleId);
+            } else if (filmId != null) {
+                base = repository.findByFilmIdAll(filmId);
+            } else if (salleId != null) {
+                base = repository.findBySalleIdAll(salleId);
+            } else {
+                base = repository.findAllWithDetails();
+            }
+            final LocalDateTime filterStart = start;
+            return base.stream().filter(s -> !s.getDebut().isBefore(filterStart)).toList();
+        }
+
+        // Only dateTo -> all seances before that date
+        if (start == null && end != null) {
+            List<Seance> base;
+            if (filmId != null && salleId != null) {
+                base = repository.findByFilmIdAndSalleIdAll(filmId, salleId);
+            } else if (filmId != null) {
+                base = repository.findByFilmIdAll(filmId);
+            } else if (salleId != null) {
+                base = repository.findBySalleIdAll(salleId);
+            } else {
+                base = repository.findAllWithDetails();
+            }
+            final LocalDateTime filterEnd = end;
+            return base.stream().filter(s -> s.getDebut().isBefore(filterEnd)).toList();
+        }
+
+        // No date filter -> keep original upcoming logic
+        if (filmId != null && salleId != null) {
             return findByFilmIdAndSalleId(filmId, salleId);
         } else if (filmId != null) {
             return findByFilmId(filmId);
