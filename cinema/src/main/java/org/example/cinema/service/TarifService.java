@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.example.cinema.model.TarifDefaut;
 import org.example.cinema.model.TarifSeance;
@@ -45,6 +46,50 @@ public class TarifService {
     public Optional<BigDecimal> findTarifForSeanceOrDefault(Long seanceId, Long typePlaceId, Long categorieId) {
         return findSeanceTarif(seanceId, typePlaceId, categorieId).map(TarifSeance::getPrix)
                 .or(() -> findByTypePlaceAndCategorie(typePlaceId, categorieId).map(TarifDefaut::getPrix));
+    }
+
+    /**
+     * Retourne, pour chaque type de place, le tarif maximal disponible pour une
+     * séance (priorité tarifs séance, sinon tarifs par défaut).
+     */
+    public Map<Long, BigDecimal> getMaxTarifByTypePlaceForSeance(Long seanceId) {
+        Map<Long, BigDecimal> result = new HashMap<>();
+
+        // Tarifs de séance groupés par type de place
+        Map<Long, List<TarifSeance>> seanceTarifs = tarifSeanceRepository.findBySeanceId(seanceId)
+                .stream()
+                .collect(Collectors.groupingBy(ts -> ts.getTypePlace().getId()));
+
+        for (Map.Entry<Long, List<TarifSeance>> entry : seanceTarifs.entrySet()) {
+            BigDecimal max = entry.getValue().stream()
+                    .map(TarifSeance::getPrix)
+                    .max(BigDecimal::compareTo)
+                    .orElse(null);
+            if (max != null) {
+                result.put(entry.getKey(), max);
+            }
+        }
+
+        // Tarifs par défaut pour les types de place non couverts par la séance
+        List<TarifDefaut> defaults = repository.findAllWithDetails();
+        Map<Long, List<TarifDefaut>> defaultsByType = defaults.stream()
+                .collect(Collectors.groupingBy(td -> td.getTypePlace().getId()));
+
+        for (Map.Entry<Long, List<TarifDefaut>> entry : defaultsByType.entrySet()) {
+            Long typePlaceId = entry.getKey();
+            if (result.containsKey(typePlaceId)) {
+                continue; // déjà couvert par un tarif de séance
+            }
+            BigDecimal max = entry.getValue().stream()
+                    .map(TarifDefaut::getPrix)
+                    .max(BigDecimal::compareTo)
+                    .orElse(null);
+            if (max != null) {
+                result.put(typePlaceId, max);
+            }
+        }
+
+        return result;
     }
 
     /**

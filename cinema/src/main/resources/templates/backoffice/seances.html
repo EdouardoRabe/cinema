@@ -45,6 +45,7 @@
                         <th>Date & Heure</th>
                         <th>Langue</th>
                         <th>Chiffre d'affaires</th>
+                        <th>CA max théorique</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -56,6 +57,7 @@
                         <td th:text="${#temporals.format(seance.debut, 'dd/MM/yyyy HH:mm')}">01/01/2026 14:00</td>
                         <td th:text="${seance.langue}">VOST</td>
                         <td style="color: var(--gold); font-weight: 600;" th:text="${#numbers.formatDecimal(chiffresAffaires[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
+                        <td style="color: var(--primary); font-weight: 600;" th:text="${#numbers.formatDecimal(capacitesMax[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <td>
                             <a th:href="@{/backoffice/seances/view/{id}(id=${seance.id})}" class="btn btn-outline">Voir</a>
                             <a th:href="@{/backoffice/seances/edit/{id}(id=${seance.id})}" class="btn btn-primary">Éditer</a>

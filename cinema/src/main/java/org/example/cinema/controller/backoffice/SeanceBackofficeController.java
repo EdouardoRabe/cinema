@@ -1,21 +1,22 @@
 package org.example.cinema.controller.backoffice;
 
+import java.util.List;
+import java.util.Map;
+
 import org.example.cinema.model.Place;
 import org.example.cinema.model.Seance;
 import org.example.cinema.service.PlaceService;
 import org.example.cinema.service.ReservationService;
 import org.example.cinema.service.SeanceService;
+import org.example.cinema.service.TarifService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/backoffice/seances")
@@ -24,35 +25,59 @@ public class SeanceBackofficeController {
     private final SeanceService seanceService;
     private final PlaceService placeService;
     private final ReservationService reservationService;
+    private final TarifService tarifService;
 
     private final org.example.cinema.service.FilmService filmService;
     private final org.example.cinema.service.SalleService salleService;
 
-    public SeanceBackofficeController(SeanceService seanceService, PlaceService placeService, ReservationService reservationService, org.example.cinema.service.FilmService filmService, org.example.cinema.service.SalleService salleService) {
+    public SeanceBackofficeController(SeanceService seanceService, PlaceService placeService,
+            ReservationService reservationService, TarifService tarifService,
+            org.example.cinema.service.FilmService filmService, org.example.cinema.service.SalleService salleService) {
         this.seanceService = seanceService;
         this.placeService = placeService;
         this.reservationService = reservationService;
+        this.tarifService = tarifService;
         this.filmService = filmService;
         this.salleService = salleService;
     }
 
     @GetMapping
     public String list(@RequestParam(name = "filmId", required = false) Long filmId,
-                       @RequestParam(name = "salleId", required = false) Long salleId,
-                       @RequestParam(name = "date", required = false) String dateStr,
-                       Model model) {
+            @RequestParam(name = "salleId", required = false) Long salleId,
+            @RequestParam(name = "date", required = false) String dateStr,
+            Model model) {
         java.time.LocalDate date = null;
         if (dateStr != null && !dateStr.isBlank()) {
             date = java.time.LocalDate.parse(dateStr);
         }
         List<Seance> seances = seanceService.findWithFilters(filmId, salleId, date);
-        
-        
+
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
-        java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService.getChiffreAffairesBySeances(seanceIds);
-        
+        java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService
+                .getChiffreAffairesBySeances(seanceIds);
+
+        // CA maximal théorique par séance (somme des places * tarif max par type de
+        // place)
+        java.util.Map<Long, java.math.BigDecimal> capacitesMax = new java.util.HashMap<>();
+        for (Seance seance : seances) {
+            java.util.Map<Long, java.math.BigDecimal> maxTarifs = tarifService
+                    .getMaxTarifByTypePlaceForSeance(seance.getId());
+            java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+            for (Place p : placeService.findBySalleId(seance.getSalle().getId())) {
+                if (p.getTypePlace() == null) {
+                    continue;
+                }
+                java.math.BigDecimal prix = maxTarifs.get(p.getTypePlace().getId());
+                if (prix != null) {
+                    total = total.add(prix);
+                }
+            }
+            capacitesMax.put(seance.getId(), total);
+        }
+
         model.addAttribute("seances", seances);
         model.addAttribute("chiffresAffaires", chiffresAffaires);
+        model.addAttribute("capacitesMax", capacitesMax);
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("selectedFilm", filmId);
@@ -72,7 +97,8 @@ public class SeanceBackofficeController {
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable("id") Long id, Model model) {
         var sOpt = seanceService.findById(id);
-        if (sOpt.isEmpty()) return "redirect:/backoffice/seances";
+        if (sOpt.isEmpty())
+            return "redirect:/backoffice/seances";
         model.addAttribute("seance", sOpt.get());
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
