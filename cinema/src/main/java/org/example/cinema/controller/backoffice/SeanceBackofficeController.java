@@ -60,13 +60,19 @@ public class SeanceBackofficeController {
     @GetMapping
     public String list(@RequestParam(name = "filmId", required = false) Long filmId,
             @RequestParam(name = "salleId", required = false) Long salleId,
-            @RequestParam(name = "date", required = false) String dateStr,
+            @RequestParam(name = "dateFrom", required = false) String dateFromStr,
+            @RequestParam(name = "dateTo", required = false) String dateToStr,
             Model model) {
-        java.time.LocalDate date = null;
-        if (dateStr != null && !dateStr.isBlank()) {
-            date = java.time.LocalDate.parse(dateStr);
+        java.time.LocalDate dateFrom = null;
+        java.time.LocalDate dateTo = null;
+        if (dateFromStr != null && !dateFromStr.isBlank()) {
+            dateFrom = java.time.LocalDate.parse(dateFromStr);
         }
-        List<Seance> seances = seanceService.findWithFilters(filmId, salleId, date);
+        if (dateToStr != null && !dateToStr.isBlank()) {
+            dateTo = java.time.LocalDate.parse(dateToStr);
+        }
+        // Utiliser findWithFiltersBackoffice pour inclure TOUTES les séances (passées et futures)
+        List<Seance> seances = seanceService.findWithFiltersBackoffice(filmId, salleId, dateFrom, dateTo);
 
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
         java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService
@@ -98,7 +104,8 @@ public class SeanceBackofficeController {
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("selectedFilm", filmId);
         model.addAttribute("selectedSalle", salleId);
-        model.addAttribute("selectedDate", dateStr);
+        model.addAttribute("selectedDateFrom", dateFromStr);
+        model.addAttribute("selectedDateTo", dateToStr);
         return "backoffice/seances";
     }
 
@@ -133,7 +140,35 @@ public class SeanceBackofficeController {
 
     @PostMapping("/save")
     public String save(Seance seance, @RequestParam Map<String, String> allParams,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes, Model model) {
+        
+        // Validation manuelle
+        List<String> errors = new ArrayList<>();
+        
+        if (seance.getFilm() == null || seance.getFilm().getId() == null) {
+            errors.add("Veuillez sélectionner un film");
+        }
+        if (seance.getSalle() == null || seance.getSalle().getId() == null) {
+            errors.add("Veuillez sélectionner une salle");
+        }
+        if (seance.getDebut() == null) {
+            errors.add("Veuillez saisir une date et heure de début");
+        }
+        if (seance.getLangue() == null || seance.getLangue().isBlank()) {
+            errors.add("Veuillez sélectionner une langue");
+        }
+        
+        // Si erreurs de validation, retourner au formulaire
+        if (!errors.isEmpty()) {
+            model.addAttribute("errors", errors);
+            model.addAttribute("seance", seance);
+            model.addAttribute("films", filmService.findAll());
+            model.addAttribute("salles", salleService.findAll());
+            model.addAttribute("typePlaces", typePlaceRepository.findAll());
+            model.addAttribute("tarifsExistants", Map.of());
+            return "backoffice/seance-form";
+        }
+        
         try {
             seanceService.save(seance);
 
@@ -181,11 +216,31 @@ public class SeanceBackofficeController {
                 tarifSeanceRepository.saveAll(toSave);
             }
 
-            redirectAttributes.addFlashAttribute("successMessage", "Séance enregistrée");
+            redirectAttributes.addFlashAttribute("successMessage", "Séance enregistrée avec succès !");
             return "redirect:/backoffice/seances";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erreur: " + e.getMessage());
-            return "redirect:/backoffice/seances";
+            // En cas d'erreur, retourner au formulaire avec le message d'erreur
+            model.addAttribute("errorMessage", "Erreur lors de l'enregistrement : " + e.getMessage());
+            model.addAttribute("seance", seance);
+            model.addAttribute("films", filmService.findAll());
+            model.addAttribute("salles", salleService.findAll());
+            model.addAttribute("typePlaces", typePlaceRepository.findAll());
+            
+            // Récupérer les tarifs saisis pour les réafficher
+            Map<Long, BigDecimal> tarifsExistants = new HashMap<>();
+            for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                String key = entry.getKey();
+                if (key.startsWith("tarifsTypePlace[") && key.endsWith("]")) {
+                    String rawId = key.substring("tarifsTypePlace[".length(), key.length() - 1);
+                    if (!rawId.isBlank() && entry.getValue() != null && !entry.getValue().isBlank()) {
+                        try {
+                            tarifsExistants.put(Long.valueOf(rawId), new BigDecimal(entry.getValue()));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+            model.addAttribute("tarifsExistants", tarifsExistants);
+            return "backoffice/seance-form";
         }
     }
 

@@ -8,6 +8,40 @@
         <div class="section-header">
             <h2 class="section-title" th:text="${seance.id} != null ? 'Éditer séance' : 'Nouvelle séance'"></h2>
         </div>
+        
+        <!-- Messages de succès -->
+        <div th:if="${successMessage}" class="alert alert-success" style="background: rgba(0, 200, 83, 0.15); border: 1px solid #00c853; color: #00c853; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span th:text="${successMessage}">Succès</span>
+        </div>
+        
+        <!-- Message d'erreur général -->
+        <div th:if="${errorMessage}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <span th:text="${errorMessage}">Erreur</span>
+        </div>
+        
+        <!-- Liste des erreurs de validation -->
+        <div th:if="${errors != null and !errors.isEmpty()}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <strong>Veuillez corriger les erreurs suivantes :</strong>
+            </div>
+            <ul style="margin: 0; padding-left: 2.5rem;">
+                <li th:each="error : ${errors}" th:text="${error}">Erreur</li>
+            </ul>
+        </div>
 
         <form th:action="@{/backoffice/seances/save}" method="post">
             <input type="hidden" name="id" th:value="${seance.id}" />
@@ -28,7 +62,11 @@
                 </div>
                 <div class="form-group">
                     <label>Début</label>
-                    <input class="form-input" type="datetime-local" name="debut" th:value="${seance.debut != null ? #dates.formatISO(seance.debut) : ''}" required />
+                    <input class="form-input" type="datetime-local" name="debut" th:value="${seance.debut != null ? #temporals.format(seance.debut, 'yyyy-MM-dd''T''HH:mm') : ''}" required />
+                </div>
+                <div class="form-group">
+                    <label>Fin <span style="color: #aaa; font-weight: normal;">(optionnel)</span></label>
+                    <input class="form-input" type="datetime-local" name="fin" th:value="${seance.fin != null ? #temporals.format(seance.fin, 'yyyy-MM-dd''T''HH:mm') : ''}" />
                 </div>
                 <div class="form-group">
                     <label>Langue</label>
