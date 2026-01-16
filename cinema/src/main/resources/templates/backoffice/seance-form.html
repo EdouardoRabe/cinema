@@ -79,12 +79,19 @@
             </div>
 
             <div class="form-section" style="margin-top: 1.5rem;">
-                <h3 style="margin-bottom: 0.75rem;">Tarifs par type de place (appliqués à toutes les catégories)</h3>
-                <p style="color: #aaa; margin-bottom: 1rem;">Saisir le prix pour chaque type de place de cette séance. Le même prix sera appliqué aux catégories (adulte, enfant, senior).</p>
-                <div class="form-grid">
-                    <div class="form-group" th:each="tp : ${typePlaces}">
-                        <label th:text="${tp.libelle}">Type place</label>
-                        <input class="form-input" type="number" min="0" step="100" th:name="${'tarifsTypePlace[' + tp.id + ']'}" th:value="${tarifsExistants[tp.id]}" placeholder="Prix en Ariary" />
+                <h3 style="margin-bottom: 0.75rem;">Tarifs par type de place et catégorie de personne</h3>
+                <p style="color: #aaa; margin-bottom: 1rem;">Saisir le prix pour chaque combinaison type de place / catégorie de personne.</p>
+                
+                <div th:each="tp : ${typePlaces}" class="tarif-type-block" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid;" th:style="'margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid ' + (tp.couleur != null ? tp.couleur : '#6c757d')">
+                    <h4 th:text="${tp.libelle}" style="margin-bottom: 0.75rem; color: #fff;">Type place</h4>
+                    <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+                        <div class="form-group" th:each="cat : ${categories}">
+                            <label th:text="${cat.libelle}" style="font-size: 0.85rem;">Catégorie</label>
+                            <input class="form-input" type="number" min="0" step="100" 
+                                   th:name="${'tarifs[' + tp.id + '_' + cat.id + ']'}" 
+                                   th:value="${tarifsExistants.get(tp.id + '_' + cat.id)}" 
+                                   placeholder="Prix en Ariary" />
+                        </div>
                     </div>
                 </div>
             </div>

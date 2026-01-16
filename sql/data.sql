@@ -106,7 +106,7 @@ WITH tp AS (
     SELECT
         (SELECT id FROM type_place WHERE libelle = 'STANDARD') AS std_id,
         (SELECT id FROM type_place WHERE libelle = 'VIP') AS vip_id,
-        (SELECT id FROM type_place WHERE libelle = 'PMR') AS pmr_id
+        (SELECT id FROM type_place WHERE libelle = 'PREMIUM') AS pmr_id
 )
 INSERT INTO place (id_salle, rangee, numero, code_place, id_type_place)
 SELECT 4, r.rangee, n.numero, r.rangee || n.numero,
@@ -151,23 +151,80 @@ INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
 (7, 2, '2026-01-11 18:00:00', '2026-01-11 21:12:00', 'VF'),
 (7, 1, '2026-01-12 10:00:00', '2026-01-12 13:12:00', 'VOST');
 
---Tarfis par defaut
-    -- ------------------------------
-    CREATE TABLE tarif_defaut (
-        id SERIAL PRIMARY KEY,
-        id_type_place INT REFERENCES type_place(id),
-        id_categorie_personne INT REFERENCES categorie_personne(id),
-        prix NUMERIC(10,2) NOT NULL
-    );
-
+-- ------------------------------
+-- TARIFS PAR DEFAUT
+-- ------------------------------
 INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
 (1, 1, 10000),  -- Standard - Adulte
-(1, 2, 10000),   -- Standard - Enfant
-(1, 3, 10000),   -- Standard - Senior
+(1, 2, 7000),   -- Standard - Enfant
+(1, 3, 8000),   -- Standard - Senior
 (2, 1, 30000),  -- VIP - Adulte
-(2, 2, 30000),  -- VIP - Enfant
-(2, 3, 30000),  -- VIP - Senior
+(2, 2, 20000),  -- VIP - Enfant
+(2, 3, 25000),  -- VIP - Senior
 (3, 1, 20000),  -- Premium - Adulte
-(3, 2, 20000),  -- Premium - Enfant
-(3, 3, 20000);   -- Premium - Senior
+(3, 2, 15000),  -- Premium - Enfant
+(3, 3, 17000);  -- Premium - Senior
+
+-- ------------------------------
+-- TARIFS SPECIFIQUES PAR SEANCE (prix variés par séance)
+-- Séance 1 (Inception - VF) - Tarifs normaux
+-- ------------------------------
+INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix) VALUES
+-- Séance 1: Inception VF - Prix standard
+(1, 1, 1, 12000),  -- Standard - Adulte
+(1, 1, 2, 8000),   -- Standard - Enfant
+(1, 1, 3, 10000),  -- Standard - Senior
+(1, 2, 1, 35000),  -- VIP - Adulte
+(1, 2, 2, 25000),  -- VIP - Enfant
+(1, 2, 3, 30000),  -- VIP - Senior
+
+-- Séance 2: Inception VOST - Prix premium (soirée)
+(2, 1, 1, 15000),  -- Standard - Adulte
+(2, 1, 2, 10000),  -- Standard - Enfant
+(2, 1, 3, 12000),  -- Standard - Senior
+(2, 2, 1, 40000),  -- VIP - Adulte
+(2, 2, 2, 28000),  -- VIP - Enfant
+(2, 2, 3, 35000),  -- VIP - Senior
+
+-- Séance 3: Le Roi Lion VF - Tarifs famille (réduits enfants)
+(3, 1, 1, 10000),  -- Standard - Adulte
+(3, 1, 2, 5000),   -- Standard - Enfant (réduit!)
+(3, 1, 3, 8000),   -- Standard - Senior
+
+-- Séance 4: Le Roi Lion VF après-midi
+(4, 1, 1, 10000),  -- Standard - Adulte
+(4, 1, 2, 5000),   -- Standard - Enfant (réduit!)
+(4, 1, 3, 8000),   -- Standard - Senior
+
+-- Séance 5: Avengers VOST soirée - Prix élevés
+(5, 1, 1, 18000),  -- Standard - Adulte
+(5, 1, 2, 12000),  -- Standard - Enfant
+(5, 1, 3, 15000),  -- Standard - Senior
+(5, 2, 1, 45000),  -- VIP - Adulte
+(5, 2, 2, 32000),  -- VIP - Enfant
+(5, 2, 3, 38000),  -- VIP - Senior
+
+-- Séance 6: Parasite VOST en salle VIP
+(6, 2, 1, 50000),  -- VIP - Adulte (exclusif)
+(6, 2, 2, 35000),  -- VIP - Enfant
+(6, 2, 3, 42000),  -- VIP - Senior
+
+-- Séances Avatar (séances 19-24) - Prix spéciaux lancement
+(19, 1, 1, 20000), -- Standard - Adulte
+(19, 1, 2, 14000), -- Standard - Enfant
+(19, 1, 3, 17000), -- Standard - Senior
+(19, 2, 1, 55000), -- VIP - Adulte
+(19, 2, 2, 40000), -- VIP - Enfant
+(19, 2, 3, 48000), -- VIP - Senior
+
+(20, 1, 1, 22000), -- VOST soirée - plus cher
+(20, 1, 2, 15000),
+(20, 1, 3, 18000),
+(20, 2, 1, 58000),
+(20, 2, 2, 42000),
+(20, 2, 3, 50000),
+
+(21, 2, 1, 60000), -- Séance VIP exclusive
+(21, 2, 2, 45000),
+(21, 2, 3, 52000);
   

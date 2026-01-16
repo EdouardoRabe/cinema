@@ -50,16 +50,27 @@ a {
    NAVIGATION
    ======================================== */
 
+/* Navbar sizing and page offset */
+:root {
+    --navbar-height: 64px; /* used to offset page content so titles aren't hidden */
+}
+
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    padding: 1rem 2rem;
+    height: var(--navbar-height);
+    padding: 0 1.5rem;
     background: linear-gradient(180deg, rgba(15, 15, 15, 0.95) 0%, rgba(15, 15, 15, 0) 100%);
     backdrop-filter: blur(10px);
     transition: var(--transition);
+}
+
+/* Ensure page content is not hidden under the fixed navbar */
+body {
+    padding-top: calc(var(--navbar-height) + 0.5rem);
 }
 
 .navbar.scrolled {
@@ -78,29 +89,32 @@ a {
 .logo {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1.75rem;
+    gap: 0.5rem;
+    font-size: 1.25rem; /* reduced */
     font-weight: 700;
     color: var(--gold);
 }
 
 .logo-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
 }
 
 .nav-links {
     display: flex;
-    gap: 2.5rem;
+    gap: 1.25rem; /* tighter */
     list-style: none;
 }
 
 .nav-links a {
     font-weight: 500;
+    font-size: 0.95rem; /* slightly smaller */
     color: var(--text-secondary);
     position: relative;
-    padding: 0.5rem 0;
+    padding: 0.25rem 0; /* reduce vertical padding */
 }
+
+.nav-actions { gap: 0.5rem; } /* tighten action buttons */
 
 .nav-links a:hover,
 .nav-links a.active {
@@ -321,11 +335,10 @@ input[type="date"]::-ms-reveal {
    ======================================== */
 
 .section {
-    padding: 5rem 2rem;
+    padding: 3rem 2rem; /* reduced to avoid excessive whitespace with navbar offset */
     max-width: 1400px;
     margin: 0 auto;
 }
-
 .section-header {
     display: flex;
     justify-content: space-between;
