@@ -80,17 +80,48 @@
 
             <div class="form-section" style="margin-top: 1.5rem;">
                 <h3 style="margin-bottom: 0.75rem;">Tarifs par type de place et catégorie de personne</h3>
-                <p style="color: #aaa; margin-bottom: 1rem;">Saisir le prix pour chaque combinaison type de place / catégorie de personne.</p>
+                <p style="color: #aaa; margin-bottom: 1rem;">Saisir le prix pour chaque combinaison type de place / catégorie de personne. Vous pouvez pré-remplir un prix en fonction d'une autre catégorie.</p>
                 
-                <div th:each="tp : ${typePlaces}" class="tarif-type-block" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid;" th:style="'margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid ' + (tp.couleur != null ? tp.couleur : '#6c757d')">
+                <div th:each="tp, tpStat : ${typePlaces}" class="tarif-type-block" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid;" th:style="'margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid ' + (tp.couleur != null ? tp.couleur : '#6c757d')">
                     <h4 th:text="${tp.libelle}" style="margin-bottom: 0.75rem; color: #fff;">Type place</h4>
-                    <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
-                        <div class="form-group" th:each="cat : ${categories}">
-                            <label th:text="${cat.libelle}" style="font-size: 0.85rem;">Catégorie</label>
-                            <input class="form-input" type="number" min="0" step="100" 
-                                   th:name="${'tarifs[' + tp.id + '_' + cat.id + ']'}" 
-                                   th:value="${tarifsExistants.get(tp.id + '_' + cat.id)}" 
-                                   placeholder="Prix en Ariary" />
+                    <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+                        <div class="form-group" th:each="cat, catStat : ${categories}">
+                            <label th:text="${cat.libelle}" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Catégorie</label>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <input class="form-input tarif-input" type="number" min="0" step="100" 
+                                       th:id="${'tarif_' + tp.id + '_' + cat.id}"
+                                       th:name="${'tarifs[' + tp.id + '_' + cat.id + ']'}" 
+                                       th:value="${tarifsExistants.get(tp.id + '_' + cat.id)}" 
+                                       th:data-tp="${tp.id}"
+                                       th:data-cat="${cat.id}"
+                                       placeholder="Prix en Ariary" />
+                                <!-- Option pré-remplissage -->
+                                <div class="prefill-option" style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
+                                    <select class="form-input prefill-source" style="padding: 0.3rem; font-size: 0.75rem; min-width: 80px; flex: 1;"
+                                            th:id="${'source_' + tp.id + '_' + cat.id}"
+                                            th:data-target="${'tarif_' + tp.id + '_' + cat.id}">
+                                        <option value="">-- Source --</option>
+                                        <option th:each="catSource : ${categories}" 
+                                                th:if="${catSource.id != cat.id}"
+                                                th:value="${tp.id + '_' + catSource.id}" 
+                                                th:text="${catSource.libelle}">Cat</option>
+                                    </select>
+                                    <span style="color: #aaa; font-size: 0.75rem;">×</span>
+                                    <input type="number" class="form-input prefill-percent" 
+                                           th:id="${'percent_' + tp.id + '_' + cat.id}"
+                                           style="width: 55px; padding: 0.3rem; font-size: 0.75rem; text-align: center;" 
+                                           value="100" min="1" max="200" placeholder="%" />
+                                    <span style="color: #aaa; font-size: 0.75rem;">%</span>
+                                    <button type="button" class="btn-prefill" 
+                                            th:data-target="${'tarif_' + tp.id + '_' + cat.id}"
+                                            th:data-source-select="${'source_' + tp.id + '_' + cat.id}"
+                                            th:data-percent="${'percent_' + tp.id + '_' + cat.id}"
+                                            style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: var(--gold); color: #000; border: none; border-radius: 4px; cursor: pointer;"
+                                            title="Appliquer">
+                                        ✓
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -105,5 +136,47 @@
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
     <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gestion des boutons de pré-remplissage
+        document.querySelectorAll('.btn-prefill').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var targetId = this.getAttribute('data-target');
+                var sourceSelectId = this.getAttribute('data-source-select');
+                var percentId = this.getAttribute('data-percent');
+                
+                var targetInput = document.getElementById(targetId);
+                var sourceSelect = document.getElementById(sourceSelectId);
+                var percentInput = document.getElementById(percentId);
+                
+                if (!sourceSelect.value) {
+                    alert('Veuillez sélectionner une catégorie source');
+                    return;
+                }
+                
+                var sourceInputId = 'tarif_' + sourceSelect.value;
+                var sourceInput = document.getElementById(sourceInputId);
+                
+                if (!sourceInput || !sourceInput.value || sourceInput.value == '0') {
+                    alert('Le prix de la catégorie source doit être rempli en premier');
+                    return;
+                }
+                
+                var sourceValue = parseFloat(sourceInput.value);
+                var percent = parseFloat(percentInput.value) || 100;
+                var calculatedValue = Math.round(sourceValue * percent / 100);
+                
+                targetInput.value = calculatedValue;
+                
+                // Animation de confirmation
+                targetInput.style.backgroundColor = 'rgba(0, 200, 83, 0.2)';
+                setTimeout(function() {
+                    targetInput.style.backgroundColor = '';
+                }, 500);
+            });
+        });
+    });
+    </script>
 </body>
 </html>
