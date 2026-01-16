@@ -105,7 +105,8 @@ public class ReservationService {
     }
 
     public java.math.BigDecimal getChiffreAffairesBySeanceId(Long seanceId) {
-        List<Reservation> reservations = reservationRepository.findBySeanceId(seanceId);
+        // Ne compte que les réservations avec statut PAYEE
+        List<Reservation> reservations = reservationRepository.findPayeesBySeanceId(seanceId);
         return reservations.stream()
                 .map(Reservation::getMontantTotal)
                 .filter(m -> m != null)
