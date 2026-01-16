@@ -115,6 +115,7 @@ public class SeanceBackofficeController {
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("typePlaces", typePlaceRepository.findAll());
+        model.addAttribute("categories", categoriePersonneService.findAll());
         model.addAttribute("tarifsExistants", Map.of());
         return "backoffice/seance-form";
     }
@@ -128,10 +129,13 @@ public class SeanceBackofficeController {
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("typePlaces", typePlaceRepository.findAll());
-        Map<Long, BigDecimal> tarifsExistants = new HashMap<>();
+        model.addAttribute("categories", categoriePersonneService.findAll());
+        // Build tarifsExistants with key format: typePlaceId_categoriePersonneId
+        Map<String, BigDecimal> tarifsExistants = new HashMap<>();
         for (TarifSeance ts : tarifSeanceRepository.findBySeanceId(id)) {
-            if (ts.getTypePlace() != null && !tarifsExistants.containsKey(ts.getTypePlace().getId())) {
-                tarifsExistants.put(ts.getTypePlace().getId(), ts.getPrix());
+            if (ts.getTypePlace() != null && ts.getCategoriePersonne() != null) {
+                String key = ts.getTypePlace().getId() + "_" + ts.getCategoriePersonne().getId();
+                tarifsExistants.put(key, ts.getPrix());
             }
         }
         model.addAttribute("tarifsExistants", tarifsExistants);
@@ -165,6 +169,7 @@ public class SeanceBackofficeController {
             model.addAttribute("films", filmService.findAll());
             model.addAttribute("salles", salleService.findAll());
             model.addAttribute("typePlaces", typePlaceRepository.findAll());
+            model.addAttribute("categories", categoriePersonneService.findAll());
             model.addAttribute("tarifsExistants", Map.of());
             return "backoffice/seance-form";
         }
@@ -182,34 +187,43 @@ public class SeanceBackofficeController {
             }
 
             var categories = categoriePersonneService.findAll();
+            Map<Long, org.example.cinema.model.CategoriePersonne> catMap = new HashMap<>();
+            for (var cat : categories) {
+                catMap.put(cat.getId(), cat);
+            }
+
             List<TarifSeance> toSave = new ArrayList<>();
 
+            // Parse tarifs[tpId_catId] format
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
-                if (!key.startsWith("tarifsTypePlace[")) {
+                if (!key.startsWith("tarifs[")) {
                     continue;
                 }
-                if (key.length() <= "tarifsTypePlace[".length())
+                if (key.length() <= "tarifs[".length())
                     continue;
-                String rawId = key.substring("tarifsTypePlace[".length(), key.length() - 1);
-                if (rawId.isBlank())
+                String rawIds = key.substring("tarifs[".length(), key.length() - 1);
+                if (rawIds.isBlank() || !rawIds.contains("_"))
                     continue;
-                Long tpId = Long.valueOf(rawId);
+                String[] parts = rawIds.split("_");
+                if (parts.length != 2)
+                    continue;
+                Long tpId = Long.valueOf(parts[0]);
+                Long catId = Long.valueOf(parts[1]);
                 String value = entry.getValue();
                 if (value == null || value.isBlank())
                     continue;
                 BigDecimal prix = new BigDecimal(value);
                 TypePlace tp = typePlaceMap.get(tpId);
-                if (tp == null)
+                var cat = catMap.get(catId);
+                if (tp == null || cat == null)
                     continue;
-                for (var cat : categories) {
-                    toSave.add(TarifSeance.builder()
-                            .seance(seance)
-                            .typePlace(tp)
-                            .categoriePersonne(cat)
-                            .prix(prix)
-                            .build());
-                }
+                toSave.add(TarifSeance.builder()
+                        .seance(seance)
+                        .typePlace(tp)
+                        .categoriePersonne(cat)
+                        .prix(prix)
+                        .build());
             }
 
             if (!toSave.isEmpty()) {
@@ -225,16 +239,17 @@ public class SeanceBackofficeController {
             model.addAttribute("films", filmService.findAll());
             model.addAttribute("salles", salleService.findAll());
             model.addAttribute("typePlaces", typePlaceRepository.findAll());
+            model.addAttribute("categories", categoriePersonneService.findAll());
             
-            // Récupérer les tarifs saisis pour les réafficher
-            Map<Long, BigDecimal> tarifsExistants = new HashMap<>();
+            // Récupérer les tarifs saisis pour les réafficher (format tpId_catId)
+            Map<String, BigDecimal> tarifsExistants = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
-                if (key.startsWith("tarifsTypePlace[") && key.endsWith("]")) {
-                    String rawId = key.substring("tarifsTypePlace[".length(), key.length() - 1);
-                    if (!rawId.isBlank() && entry.getValue() != null && !entry.getValue().isBlank()) {
+                if (key.startsWith("tarifs[") && key.endsWith("]")) {
+                    String rawIds = key.substring("tarifs[".length(), key.length() - 1);
+                    if (!rawIds.isBlank() && rawIds.contains("_") && entry.getValue() != null && !entry.getValue().isBlank()) {
                         try {
-                            tarifsExistants.put(Long.valueOf(rawId), new BigDecimal(entry.getValue()));
+                            tarifsExistants.put(rawIds, new BigDecimal(entry.getValue()));
                         } catch (NumberFormatException ignored) {}
                     }
                 }
