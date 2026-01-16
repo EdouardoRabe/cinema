@@ -158,4 +158,12 @@ CREATE TABLE film (
         prix NUMERIC(10,2) NOT NULL
     );
 
-  
+    -- ------------------------------
+    -- PAIEMENT
+    -- ------------------------------
+    CREATE TABLE paiement (
+        id SERIAL PRIMARY KEY,
+        id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
+        montant_paye NUMERIC(10,2) NOT NULL,
+        date_paiement TIMESTAMPTZ DEFAULT now()
+    );

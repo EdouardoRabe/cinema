@@ -23,6 +23,31 @@
     <section class="section">
         <div class="reservations-container" style="max-width: 1000px; margin: 0 auto;">
             
+            <!-- Messages flash -->
+            <div th:if="${successMessage}" class="alert alert-success" style="background: rgba(0, 200, 83, 0.15); border: 1px solid #00c853; color: #00c853; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <span th:text="${successMessage}">Succès</span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-error" style="background: rgba(229, 9, 20, 0.15); border: 1px solid #e50914; color: #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span th:text="${errorMessage}">Erreur</span>
+            </div>
+            <div th:if="${infoMessage}" class="alert alert-info" style="background: rgba(33, 150, 243, 0.15); border: 1px solid #2196f3; color: #64b5f6; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span th:text="${infoMessage}">Info</span>
+            </div>
+            
             <!-- Stats rapides -->
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; text-align: center;">
@@ -121,9 +146,27 @@
                         </div>
                         
                         <!-- Prix et Actions -->
-                        <div style="text-align: right; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div style="text-align: right; display: flex; flex-direction: column; justify-content: space-between; gap: 0.5rem;">
                             <div style="color: var(--gold); font-size: 1.25rem; font-weight: 700;" th:text="${#numbers.formatDecimal(reservation.montantTotal, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="'Créée le ' + ${#temporals.format(reservation.creeLe, 'dd/MM/yyyy')}">Date création</div>
+                            <!-- Bouton Payer si non payée -->
+                            <a th:if="${reservation.statut != null && reservation.statut.code != 'PAYEE' && reservation.statut.code != 'ANNULEE' && reservation.statut.code != 'EXPIREE'}" 
+                               th:href="@{/paiement/{id}(id=${reservation.id})}" 
+                               class="btn btn-primary btn-sm" style="margin-top: 0.5rem;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                    <line x1="1" y1="10" x2="23" y2="10"/>
+                                </svg>
+                                Payer
+                            </a>
+                            <span th:if="${reservation.statut != null && reservation.statut.code == 'PAYEE'}" 
+                                  style="color: #00c853; font-size: 0.85rem; display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                Payée
+                            </span>
                         </div>
                     </div>
                     
