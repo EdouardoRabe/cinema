@@ -18,14 +18,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Entity
-@Table(name = "tarif_seance")
+@Table(name = "remise")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TarifSeance {
+public class Remise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,15 +40,26 @@ public class TarifSeance {
     @JoinColumn(name = "id_type_place")
     private TypePlace typePlace;
 
+    /**
+     * La catégorie de personne qui reçoit le prix calculé (cible du pourcentage)
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_categorie_personne")
-    private CategoriePersonne categoriePersonne;
+    @JoinColumn(name = "id_categorie_personne_cible")
+    private CategoriePersonne categoriePersonneCible;
 
     /**
-     * Prix en Ariary. Si NULL, le prix est calculé via la table remise.
+     * La catégorie de personne dont le prix sert de référence (multiplié par le pourcentage)
      */
-    @Column(precision = 10, scale = 2)
-    private BigDecimal prix;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categorie_personne_repere")
+    private CategoriePersonne categoriePersonneRepere;
+
+    /**
+     * Le pourcentage à appliquer au prix de référence (ex: 50 pour 50%)
+     * Si négatif, la remise est désactivée (historique)
+     */
+    @Column(nullable = false, precision = 5, scale = 2)
+    private BigDecimal pourcentage;
     
     /**
      * Date de création pour garder l'historique et prendre le plus récent

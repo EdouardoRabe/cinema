@@ -15,6 +15,18 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     @Query("SELECT t FROM Ticket t WHERE t.seance.id = :seanceId")
     List<Ticket> findBySeanceId(@Param("seanceId") Long seanceId);
     
+    /**
+     * Récupère les tickets d'une séance avec leurs détails (place, type de place, catégorie)
+     * pour le calcul du CA fictif
+     */
+    @Query("SELECT t FROM Ticket t " +
+           "JOIN FETCH t.place p " +
+           "JOIN FETCH p.typePlace " +
+           "JOIN FETCH t.categoriePersonne " +
+           "WHERE t.seance.id = :seanceId " +
+           "AND t.statut.code NOT IN ('ANNULE', 'REMBOURSE')")
+    List<Ticket> findBySeanceIdWithDetails(@Param("seanceId") Long seanceId);
+    
     @Query("SELECT t.place.id FROM Ticket t WHERE t.seance.id = :seanceId AND t.statut.code NOT IN ('ANNULE', 'REMBOURSE')")
     Set<Long> findOccupiedPlaceIdsBySeanceId(@Param("seanceId") Long seanceId);
     
