@@ -9,8 +9,10 @@ import java.util.stream.Collectors;
 
 import org.example.cinema.model.TarifDefaut;
 import org.example.cinema.model.TarifSeance;
+import org.example.cinema.model.Ticket;
 import org.example.cinema.repository.TarifDefautRepository;
 import org.example.cinema.repository.TarifSeanceRepository;
+import org.example.cinema.repository.TicketRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,12 +20,14 @@ public class TarifService {
 
     private final TarifDefautRepository repository;
     private final TarifSeanceRepository tarifSeanceRepository;
+    private final TicketRepository ticketRepository;
     private final RemiseService remiseService;
 
     public TarifService(TarifDefautRepository repository, TarifSeanceRepository tarifSeanceRepository,
-                        RemiseService remiseService) {
+                        TicketRepository ticketRepository, RemiseService remiseService) {
         this.repository = repository;
         this.tarifSeanceRepository = tarifSeanceRepository;
+        this.ticketRepository = ticketRepository;
         this.remiseService = remiseService;
     }
 
@@ -44,27 +48,91 @@ public class TarifService {
     }
 
     /**
-     * Priorité: tarif de séance (avec support remise si prix NULL) puis tarif par défaut.
+     * MÉTHODE CENTRALE : Calcule le prix pour une séance donnée.
+     * Priorité: 
+     * 1. Tarif de séance (prix direct si non NULL)
+     * 2. Remise (si prix NULL dans tarif_seance, calcul via pourcentage)
+     * 3. Tarif par défaut
+     * 
+     * @param seanceId ID de la séance
+     * @param typePlaceId ID du type de place
+     * @param categorieId ID de la catégorie de personne
+     * @return Le prix calculé, ou null si aucun tarif trouvé
      */
-    public Optional<BigDecimal> findTarifForSeanceOrDefault(Long seanceId, Long typePlaceId, Long categorieId) {
+    public BigDecimal getPrixPourSeance(Long seanceId, Long typePlaceId, Long categorieId) {
+        // 1. Chercher tarif de séance le plus récent
         Optional<TarifSeance> tarifSeanceOpt = findSeanceTarif(seanceId, typePlaceId, categorieId);
         
         if (tarifSeanceOpt.isPresent()) {
             TarifSeance tarifSeance = tarifSeanceOpt.get();
             if (tarifSeance.getPrix() != null) {
                 // Prix direct dans tarif_seance
-                return Optional.of(tarifSeance.getPrix());
+                return tarifSeance.getPrix();
             } else {
                 // Prix NULL => chercher dans remise
                 BigDecimal prixCalcule = remiseService.calculerPrixAvecRemise(seanceId, typePlaceId, categorieId);
                 if (prixCalcule != null) {
-                    return Optional.of(prixCalcule);
+                    return prixCalcule;
                 }
             }
         }
         
-        // Sinon, tarif par défaut
-        return findByTypePlaceAndCategorie(typePlaceId, categorieId).map(TarifDefaut::getPrix);
+        // 3. Sinon, tarif par défaut
+        return findByTypePlaceAndCategorie(typePlaceId, categorieId)
+                .map(TarifDefaut::getPrix)
+                .orElse(null);
+    }
+
+    /**
+     * Priorité: tarif de séance (avec support remise si prix NULL) puis tarif par défaut.
+     * @deprecated Utiliser getPrixPourSeance() à la place
+     */
+    @Deprecated
+    public Optional<BigDecimal> findTarifForSeanceOrDefault(Long seanceId, Long typePlaceId, Long categorieId) {
+        return Optional.ofNullable(getPrixPourSeance(seanceId, typePlaceId, categorieId));
+    }
+
+    /**
+     * Calcule le chiffre d'affaires fictif d'une séance.
+     * Utilise les tickets existants mais avec les tarifs actuels (les plus récents).
+     * Permet de voir combien la séance rapporterait avec les prix actuels.
+     * 
+     * @param seanceId ID de la séance
+     * @return Le CA fictif calculé avec les tarifs actuels
+     */
+    public BigDecimal calculerCAFictif(Long seanceId) {
+        List<Ticket> tickets = ticketRepository.findBySeanceIdWithDetails(seanceId);
+        BigDecimal caFictif = BigDecimal.ZERO;
+        
+        for (Ticket ticket : tickets) {
+            if (ticket.getPlace() == null || ticket.getPlace().getTypePlace() == null || ticket.getCategoriePersonne() == null) {
+                continue;
+            }
+            
+            Long typePlaceId = ticket.getPlace().getTypePlace().getId();
+            Long categorieId = ticket.getCategoriePersonne().getId();
+            
+            BigDecimal prix = getPrixPourSeance(seanceId, typePlaceId, categorieId);
+            if (prix != null) {
+                caFictif = caFictif.add(prix);
+            }
+        }
+        
+        return caFictif;
+    }
+    
+    /**
+     * Calcule les CA fictifs pour plusieurs séances.
+     * 
+     * @param seanceIds Liste des IDs de séances
+     * @return Map seanceId -> CA fictif
+     */
+    public Map<Long, BigDecimal> calculerCAFictifsBySeances(List<Long> seanceIds) {
+        Map<Long, BigDecimal> result = new HashMap<>();
+        for (Long seanceId : seanceIds) {
+            result.put(seanceId, calculerCAFictif(seanceId));
+        }
+        return result;
     }
 
     /**
@@ -85,14 +153,8 @@ public class TarifService {
             BigDecimal max = null;
             
             for (TarifSeance ts : entry.getValue()) {
-                BigDecimal prix;
-                if (ts.getPrix() != null) {
-                    prix = ts.getPrix();
-                } else {
-                    // Prix NULL => calculer via remise
-                    prix = remiseService.calculerPrixAvecRemise(
-                            seanceId, typePlaceId, ts.getCategoriePersonne().getId());
-                }
+                // Utiliser la méthode centrale
+                BigDecimal prix = getPrixPourSeance(seanceId, typePlaceId, ts.getCategoriePersonne().getId());
                 
                 if (prix != null) {
                     if (max == null || prix.compareTo(max) > 0) {

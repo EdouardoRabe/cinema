@@ -84,11 +84,16 @@ public class SeanceBackofficeController {
         List<Seance> seances = seanceService.findWithFiltersBackoffice(filmId, salleId, dateFrom, dateTo);
 
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
+        
+        // CA réel (basé sur les réservations payées)
         java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService
                 .getChiffreAffairesBySeances(seanceIds);
+        
+        // CA fictif (basé sur les tickets avec les tarifs actuels)
+        java.util.Map<Long, java.math.BigDecimal> chiffresAffairesFictifs = tarifService
+                .calculerCAFictifsBySeances(seanceIds);
 
-        // CA maximal théorique par séance (somme des places * tarif max par type de
-        // place)
+        // CA maximal théorique par séance (somme des places * tarif max par type de place)
         java.util.Map<Long, java.math.BigDecimal> capacitesMax = new java.util.HashMap<>();
         for (Seance seance : seances) {
             java.util.Map<Long, java.math.BigDecimal> maxTarifs = tarifService
@@ -108,6 +113,7 @@ public class SeanceBackofficeController {
 
         model.addAttribute("seances", seances);
         model.addAttribute("chiffresAffaires", chiffresAffaires);
+        model.addAttribute("chiffresAffairesFictifs", chiffresAffairesFictifs);
         model.addAttribute("capacitesMax", capacitesMax);
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());
