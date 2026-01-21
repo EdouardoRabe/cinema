@@ -149,14 +149,19 @@ CREATE TABLE film (
 
     -- ------------------------------
     -- TARIF SPECIFIQUE PAR SEANCE (OPTIONNEL)
+    -- Si prix est NULL, le prix est calculé via la table remise
+    -- date_creation permet de garder l'historique et prendre le plus récent
     -- ------------------------------
     CREATE TABLE tarif_seance (
         id SERIAL PRIMARY KEY,
         id_seance INT REFERENCES seance(id),
         id_type_place INT REFERENCES type_place(id),
         id_categorie_personne INT REFERENCES categorie_personne(id),
-        prix NUMERIC(10,2) NOT NULL
+        prix NUMERIC(10,2),
+        date_creation TIMESTAMPTZ DEFAULT now()
     );
+
+    CREATE INDEX idx_tarif_seance_lookup ON tarif_seance(id_seance, id_type_place, id_categorie_personne, date_creation DESC);
 
     -- ------------------------------
     -- PAIEMENT
@@ -167,3 +172,21 @@ CREATE TABLE film (
         montant_paye NUMERIC(10,2) NOT NULL,
         date_paiement TIMESTAMPTZ DEFAULT now()
     );
+
+
+    -- ------------------------------
+    -- REMISE (pourcentage basé sur une autre catégorie)
+    -- Si pourcentage < 0, la remise est désactivée (historique)
+    -- date_creation permet de garder l'historique et prendre le plus récent
+    -- ------------------------------
+    CREATE TABLE remise (
+        id SERIAL PRIMARY KEY,
+        id_seance INT REFERENCES seance(id) ON DELETE CASCADE,
+        id_type_place INT REFERENCES type_place(id),
+        id_categorie_personne_cible INT REFERENCES categorie_personne(id),
+        id_categorie_personne_repere INT REFERENCES categorie_personne(id),
+        pourcentage NUMERIC(5,2) NOT NULL,
+        date_creation TIMESTAMPTZ DEFAULT now()
+    );
+
+    CREATE INDEX idx_remise_lookup ON remise(id_seance, id_type_place, id_categorie_personne_cible, date_creation DESC);

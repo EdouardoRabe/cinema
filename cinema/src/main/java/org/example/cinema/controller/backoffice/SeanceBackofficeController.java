@@ -6,18 +6,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.example.cinema.model.CategoriePersonne;
 import org.example.cinema.model.Place;
+import org.example.cinema.model.Remise;
 import org.example.cinema.model.Seance;
 import org.example.cinema.model.TarifSeance;
 import org.example.cinema.model.TypePlace;
+import org.example.cinema.repository.RemiseRepository;
 import org.example.cinema.repository.TarifSeanceRepository;
 import org.example.cinema.repository.TypePlaceRepository;
 import org.example.cinema.service.CategoriePersonneService;
 import org.example.cinema.service.PlaceService;
+import org.example.cinema.service.RemiseService;
 import org.example.cinema.service.ReservationService;
 import org.example.cinema.service.SeanceService;
 import org.example.cinema.service.TarifService;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +42,8 @@ public class SeanceBackofficeController {
     private final TypePlaceRepository typePlaceRepository;
     private final TarifSeanceRepository tarifSeanceRepository;
     private final CategoriePersonneService categoriePersonneService;
+    private final RemiseRepository remiseRepository;
+    private final RemiseService remiseService;
 
     private final org.example.cinema.service.FilmService filmService;
     private final org.example.cinema.service.SalleService salleService;
@@ -45,6 +52,7 @@ public class SeanceBackofficeController {
             ReservationService reservationService, TarifService tarifService,
             TypePlaceRepository typePlaceRepository, TarifSeanceRepository tarifSeanceRepository,
             CategoriePersonneService categoriePersonneService,
+            RemiseRepository remiseRepository, RemiseService remiseService,
             org.example.cinema.service.FilmService filmService, org.example.cinema.service.SalleService salleService) {
         this.seanceService = seanceService;
         this.placeService = placeService;
@@ -53,6 +61,8 @@ public class SeanceBackofficeController {
         this.typePlaceRepository = typePlaceRepository;
         this.tarifSeanceRepository = tarifSeanceRepository;
         this.categoriePersonneService = categoriePersonneService;
+        this.remiseRepository = remiseRepository;
+        this.remiseService = remiseService;
         this.filmService = filmService;
         this.salleService = salleService;
     }
@@ -71,7 +81,6 @@ public class SeanceBackofficeController {
         if (dateToStr != null && !dateToStr.isBlank()) {
             dateTo = java.time.LocalDate.parse(dateToStr);
         }
-        // Utiliser findWithFiltersBackoffice pour inclure TOUTES les séances (passées et futures)
         List<Seance> seances = seanceService.findWithFiltersBackoffice(filmId, salleId, dateFrom, dateTo);
 
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
@@ -117,6 +126,7 @@ public class SeanceBackofficeController {
         model.addAttribute("typePlaces", typePlaceRepository.findAll());
         model.addAttribute("categories", categoriePersonneService.findAll());
         model.addAttribute("tarifsExistants", Map.of());
+        model.addAttribute("remisesExistantes", Map.of());
         return "backoffice/seance-form";
     }
 
@@ -130,19 +140,31 @@ public class SeanceBackofficeController {
         model.addAttribute("salles", salleService.findAll());
         model.addAttribute("typePlaces", typePlaceRepository.findAll());
         model.addAttribute("categories", categoriePersonneService.findAll());
-        // Build tarifsExistants with key format: typePlaceId_categoriePersonneId
+        
         Map<String, BigDecimal> tarifsExistants = new HashMap<>();
-        for (TarifSeance ts : tarifSeanceRepository.findBySeanceId(id)) {
+        for (TarifSeance ts : tarifSeanceRepository.findLatestBySeanceId(id)) {
             if (ts.getTypePlace() != null && ts.getCategoriePersonne() != null) {
                 String key = ts.getTypePlace().getId() + "_" + ts.getCategoriePersonne().getId();
-                tarifsExistants.put(key, ts.getPrix());
+                tarifsExistants.put(key, ts.getPrix()); // peut être null si remise
             }
         }
         model.addAttribute("tarifsExistants", tarifsExistants);
+        
+        Map<String, String> remisesExistantes = new HashMap<>();
+        for (Remise r : remiseService.findLatestActiveBySeanceId(id)) {
+            if (r.getTypePlace() != null && r.getCategoriePersonneCible() != null && r.getCategoriePersonneRepere() != null) {
+                String key = r.getTypePlace().getId() + "_" + r.getCategoriePersonneCible().getId();
+                String value = r.getCategoriePersonneRepere().getId() + "_" + r.getPourcentage().stripTrailingZeros().toPlainString();
+                remisesExistantes.put(key, value);
+            }
+        }
+        model.addAttribute("remisesExistantes", remisesExistantes);
+        
         return "backoffice/seance-form";
     }
 
     @PostMapping("/save")
+    @Transactional
     public String save(Seance seance, @RequestParam Map<String, String> allParams,
             RedirectAttributes redirectAttributes, Model model) {
         
@@ -171,14 +193,15 @@ public class SeanceBackofficeController {
             model.addAttribute("typePlaces", typePlaceRepository.findAll());
             model.addAttribute("categories", categoriePersonneService.findAll());
             model.addAttribute("tarifsExistants", Map.of());
+            model.addAttribute("remisesExistantes", Map.of());
             return "backoffice/seance-form";
         }
         
         try {
             seanceService.save(seance);
 
-            // Supprimer les tarifs existants de la séance (si édition)
-            tarifSeanceRepository.deleteBySeanceId(seance.getId());
+            // Ne plus supprimer - on crée de nouvelles entrées avec date_creation
+            // Les anciennes remises avec pourcentage >= 0 seront désactivées (pourcentage négatif) si on passe à un prix direct
 
             List<TypePlace> typePlaces = typePlaceRepository.findAll();
             Map<Long, TypePlace> typePlaceMap = new HashMap<>();
@@ -187,47 +210,88 @@ public class SeanceBackofficeController {
             }
 
             var categories = categoriePersonneService.findAll();
-            Map<Long, org.example.cinema.model.CategoriePersonne> catMap = new HashMap<>();
+            Map<Long, CategoriePersonne> catMap = new HashMap<>();
             for (var cat : categories) {
                 catMap.put(cat.getId(), cat);
             }
 
-            List<TarifSeance> toSave = new ArrayList<>();
+            List<TarifSeance> tarifsToSave = new ArrayList<>();
+            List<Remise> remisesToSave = new ArrayList<>();
 
-            // Parse tarifs[tpId_catId] format
+            // Parse tarifs[tpId_catId] et remises[tpId_catId]
+            // Format remise: "sourceId_pourcentage" (ex: "1_50" pour catégorie 1 à 50%)
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
-                if (!key.startsWith("tarifs[")) {
-                    continue;
+                
+                // Traitement des tarifs
+                if (key.startsWith("tarifs[") && key.endsWith("]")) {
+                    String rawIds = key.substring("tarifs[".length(), key.length() - 1);
+                    if (rawIds.isBlank() || !rawIds.contains("_"))
+                        continue;
+                    String[] parts = rawIds.split("_");
+                    if (parts.length != 2)
+                        continue;
+                    Long tpId = Long.valueOf(parts[0]);
+                    Long catId = Long.valueOf(parts[1]);
+                    String value = entry.getValue();
+                    
+                    TypePlace tp = typePlaceMap.get(tpId);
+                    CategoriePersonne cat = catMap.get(catId);
+                    if (tp == null || cat == null)
+                        continue;
+                    
+                    // Vérifier si une remise existe pour ce tarif
+                    String remiseKey = "remises[" + tpId + "_" + catId + "]";
+                    String remiseValue = allParams.get(remiseKey);
+                    
+                    if (remiseValue != null && !remiseValue.isBlank()) {
+                        // Il y a une remise => prix NULL dans tarif_seance, nouvelle remise dans table remise
+                        String[] remiseParts = remiseValue.split("_");
+                        if (remiseParts.length == 2) {
+                            Long sourceId = Long.valueOf(remiseParts[0]);
+                            BigDecimal pourcentage = new BigDecimal(remiseParts[1]);
+                            CategoriePersonne catSource = catMap.get(sourceId);
+                            
+                            if (catSource != null) {
+                                // Créer nouveau tarif avec prix NULL (nouvelle date_creation)
+                                tarifsToSave.add(TarifSeance.builder()
+                                        .seance(seance)
+                                        .typePlace(tp)
+                                        .categoriePersonne(cat)
+                                        .prix(null) // Prix NULL pour indiquer utilisation de remise
+                                        .build());
+                                
+                                // Créer nouvelle remise (avec pourcentage positif)
+                                remisesToSave.add(Remise.builder()
+                                        .seance(seance)
+                                        .typePlace(tp)
+                                        .categoriePersonneCible(cat)
+                                        .categoriePersonneRepere(catSource)
+                                        .pourcentage(pourcentage)
+                                        .build());
+                            }
+                        }
+                    } else if (value != null && !value.isBlank()) {
+                        // Pas de remise => prix direct
+                        // Désactiver l'ancienne remise si elle existe (mettre pourcentage en négatif)
+                        remiseService.deactivateRemise(seance.getId(), tpId, catId);
+                        
+                        BigDecimal prix = new BigDecimal(value);
+                        tarifsToSave.add(TarifSeance.builder()
+                                .seance(seance)
+                                .typePlace(tp)
+                                .categoriePersonne(cat)
+                                .prix(prix)
+                                .build());
+                    }
                 }
-                if (key.length() <= "tarifs[".length())
-                    continue;
-                String rawIds = key.substring("tarifs[".length(), key.length() - 1);
-                if (rawIds.isBlank() || !rawIds.contains("_"))
-                    continue;
-                String[] parts = rawIds.split("_");
-                if (parts.length != 2)
-                    continue;
-                Long tpId = Long.valueOf(parts[0]);
-                Long catId = Long.valueOf(parts[1]);
-                String value = entry.getValue();
-                if (value == null || value.isBlank())
-                    continue;
-                BigDecimal prix = new BigDecimal(value);
-                TypePlace tp = typePlaceMap.get(tpId);
-                var cat = catMap.get(catId);
-                if (tp == null || cat == null)
-                    continue;
-                toSave.add(TarifSeance.builder()
-                        .seance(seance)
-                        .typePlace(tp)
-                        .categoriePersonne(cat)
-                        .prix(prix)
-                        .build());
             }
 
-            if (!toSave.isEmpty()) {
-                tarifSeanceRepository.saveAll(toSave);
+            if (!tarifsToSave.isEmpty()) {
+                tarifSeanceRepository.saveAll(tarifsToSave);
+            }
+            if (!remisesToSave.isEmpty()) {
+                remiseRepository.saveAll(remisesToSave);
             }
 
             redirectAttributes.addFlashAttribute("successMessage", "Séance enregistrée avec succès !");
@@ -243,6 +307,7 @@ public class SeanceBackofficeController {
             
             // Récupérer les tarifs saisis pour les réafficher (format tpId_catId)
             Map<String, BigDecimal> tarifsExistants = new HashMap<>();
+            Map<String, String> remisesExistantes = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith("tarifs[") && key.endsWith("]")) {
@@ -253,8 +318,15 @@ public class SeanceBackofficeController {
                         } catch (NumberFormatException ignored) {}
                     }
                 }
+                if (key.startsWith("remises[") && key.endsWith("]")) {
+                    String rawIds = key.substring("remises[".length(), key.length() - 1);
+                    if (!rawIds.isBlank() && rawIds.contains("_") && entry.getValue() != null && !entry.getValue().isBlank()) {
+                        remisesExistantes.put(rawIds, entry.getValue());
+                    }
+                }
             }
             model.addAttribute("tarifsExistants", tarifsExistants);
+            model.addAttribute("remisesExistantes", remisesExistantes);
             return "backoffice/seance-form";
         }
     }

@@ -228,5 +228,5 @@ INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix)
 (21, 2, 2, 45000),
 (21, 2, 3, 52000);
   
-update tarif_seance set prix = 80000 where id_seance=30 and id_type_place = 2 and id_categorie_personne=1;
-update tarif_seance set prix = 40000 where id_seance=30 and id_type_place = 2 and id_categorie_personne=2;
+-- update tarif_seance set prix = 80000 where id_seance=30 and id_type_place = 2 and id_categorie_personne=1;
+-- update tarif_seance set prix = 40000 where id_seance=30 and id_type_place = 2 and id_categorie_personne=2;

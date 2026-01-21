@@ -18,10 +18,13 @@ public class TarifService {
 
     private final TarifDefautRepository repository;
     private final TarifSeanceRepository tarifSeanceRepository;
+    private final RemiseService remiseService;
 
-    public TarifService(TarifDefautRepository repository, TarifSeanceRepository tarifSeanceRepository) {
+    public TarifService(TarifDefautRepository repository, TarifSeanceRepository tarifSeanceRepository,
+                        RemiseService remiseService) {
         this.repository = repository;
         this.tarifSeanceRepository = tarifSeanceRepository;
+        this.remiseService = remiseService;
     }
 
     public List<TarifDefaut> findAll() {
@@ -33,40 +36,73 @@ public class TarifService {
     }
 
     /**
-     * Retourne un tarif spécifique à une séance si présent.
+     * Retourne un tarif le plus récent spécifique à une séance si présent.
      */
     public Optional<TarifSeance> findSeanceTarif(Long seanceId, Long typePlaceId, Long categorieId) {
-        return tarifSeanceRepository.findBySeanceIdAndTypePlaceIdAndCategoriePersonneId(seanceId, typePlaceId,
+        return tarifSeanceRepository.findLatestBySeanceIdAndTypePlaceIdAndCategoriePersonneId(seanceId, typePlaceId,
                 categorieId);
     }
 
     /**
-     * Priorité: tarif de séance puis tarif par défaut.
+     * Priorité: tarif de séance (avec support remise si prix NULL) puis tarif par défaut.
      */
     public Optional<BigDecimal> findTarifForSeanceOrDefault(Long seanceId, Long typePlaceId, Long categorieId) {
-        return findSeanceTarif(seanceId, typePlaceId, categorieId).map(TarifSeance::getPrix)
-                .or(() -> findByTypePlaceAndCategorie(typePlaceId, categorieId).map(TarifDefaut::getPrix));
+        Optional<TarifSeance> tarifSeanceOpt = findSeanceTarif(seanceId, typePlaceId, categorieId);
+        
+        if (tarifSeanceOpt.isPresent()) {
+            TarifSeance tarifSeance = tarifSeanceOpt.get();
+            if (tarifSeance.getPrix() != null) {
+                // Prix direct dans tarif_seance
+                return Optional.of(tarifSeance.getPrix());
+            } else {
+                // Prix NULL => chercher dans remise
+                BigDecimal prixCalcule = remiseService.calculerPrixAvecRemise(seanceId, typePlaceId, categorieId);
+                if (prixCalcule != null) {
+                    return Optional.of(prixCalcule);
+                }
+            }
+        }
+        
+        // Sinon, tarif par défaut
+        return findByTypePlaceAndCategorie(typePlaceId, categorieId).map(TarifDefaut::getPrix);
     }
 
     /**
      * Retourne, pour chaque type de place, le tarif maximal disponible pour une
-     * séance (priorité tarifs séance, sinon tarifs par  défaut).
+     * séance (priorité tarifs séance les plus récents, sinon tarifs par défaut).
+     * Prend en compte les remises si prix NULL.
      */
     public Map<Long, BigDecimal> getMaxTarifByTypePlaceForSeance(Long seanceId) {
         Map<Long, BigDecimal> result = new HashMap<>();
 
-        // Tarifs de séance groupés par type de place
-        Map<Long, List<TarifSeance>> seanceTarifs = tarifSeanceRepository.findBySeanceId(seanceId)
+        // Tarifs de séance les plus récents groupés par type de place
+        Map<Long, List<TarifSeance>> seanceTarifs = tarifSeanceRepository.findLatestBySeanceId(seanceId)
                 .stream()
                 .collect(Collectors.groupingBy(ts -> ts.getTypePlace().getId()));
 
         for (Map.Entry<Long, List<TarifSeance>> entry : seanceTarifs.entrySet()) {
-            BigDecimal max = entry.getValue().stream()
-                    .map(TarifSeance::getPrix)
-                    .max(BigDecimal::compareTo)
-                    .orElse(null);
+            Long typePlaceId = entry.getKey();
+            BigDecimal max = null;
+            
+            for (TarifSeance ts : entry.getValue()) {
+                BigDecimal prix;
+                if (ts.getPrix() != null) {
+                    prix = ts.getPrix();
+                } else {
+                    // Prix NULL => calculer via remise
+                    prix = remiseService.calculerPrixAvecRemise(
+                            seanceId, typePlaceId, ts.getCategoriePersonne().getId());
+                }
+                
+                if (prix != null) {
+                    if (max == null || prix.compareTo(max) > 0) {
+                        max = prix;
+                    }
+                }
+            }
+            
             if (max != null) {
-                result.put(entry.getKey(), max);
+                result.put(typePlaceId, max);
             }
         }
 
