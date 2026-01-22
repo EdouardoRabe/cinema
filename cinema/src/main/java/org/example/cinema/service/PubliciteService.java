@@ -47,10 +47,10 @@ public class PubliciteService {
 
     /**
      * Ajoute ou met à jour une diffusion de publicité.
-     * Si une entrée existe déjà pour cette société et ce mois, on update le nb_fois
+     * Si une entrée existe déjà pour cette société et ce mois, on additionne le nb_fois
      * @param societeId ID de la société
      * @param dateDiffusion Date de diffusion (seuls mois/année comptent)
-     * @param nbFois Nombre de diffusions
+     * @param nbFois Nombre de diffusions à ajouter
      */
     @Transactional
     public Publicite addOrUpdateDiffusion(Long societeId, LocalDate dateDiffusion, Integer nbFois) {
@@ -60,9 +60,9 @@ public class PubliciteService {
         Optional<Publicite> existing = repository.findBySocieteIdAndYearMonth(societeId, annee, mois);
         
         if (existing.isPresent()) {
-            // Update: remplacer le nombre de fois
+            // Update: additionner l'ancien nombre avec le nouveau
             Publicite pub = existing.get();
-            pub.setNbFois(nbFois);
+            pub.setNbFois(pub.getNbFois() + nbFois);
             // Normaliser la date au 1er du mois
             pub.setDateDiffusion(LocalDate.of(annee, mois, 1));
             return repository.save(pub);
