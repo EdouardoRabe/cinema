@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "prix_publicite")
@@ -20,5 +20,5 @@ public class PrixPublicite {
 
     @Column(name = "date_creation")
     @Builder.Default
-    private OffsetDateTime dateCreation = OffsetDateTime.now();
+    private LocalDateTime dateCreation = LocalDateTime.now();
 }

@@ -8,9 +8,9 @@
         <div class="section-header">
             <h2 class="section-title">Prix des Publicités</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">📋 Diffusions</a>
-                <a th:href="@{/backoffice/societes}" class="btn btn-outline">🏢 Sociétés</a>
-                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-primary">💰 Prix</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-primary">Prix</a>
                 <a th:href="@{/backoffice/prix-publicite/create}" class="btn btn-gold">+ Nouveau</a>
             </div>
         </div>
@@ -25,14 +25,14 @@
 
         <!-- Prix actuel -->
         <div th:if="${prixActuel != null}" class="info-card" style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(229, 9, 20, 0.1) 100%); border-radius: 12px; border: 1px solid var(--primary);">
-            <h3 style="margin: 0 0 0.5rem 0; color: var(--primary);">💰 Prix actuel</h3>
+            <h3 style="margin: 0 0 0.5rem 0; color: var(--primary);">Prix actuel</h3>
             <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--gold);">
                 <span th:text="${#numbers.formatDecimal(prixActuel, 0, 'COMMA', 0, 'POINT')}">200,000</span> Ar
                 <small style="font-size: 1rem; color: #aaa;">/ diffusion</small>
             </p>
         </div>
         <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 2rem;">
-            <strong>⚠</strong> Aucun prix n'est défini. Veuillez en créer un pour pouvoir calculer le CA.
+            Aucun prix n'est défini. Veuillez en créer un pour pouvoir calculer le CA.
         </div>
 
         <h3 style="margin-bottom: 1rem;">Historique des prix</h3>
@@ -65,7 +65,7 @@
         </div>
         
         <p style="margin-top: 1rem; color: #888; font-size: 0.9rem;">
-            <em>💡 Le prix avec la date la plus récente (mais antérieure au mois de diffusion) est utilisé pour calculer le CA.</em>
+            <em>Le prix avec la date la plus récente (mais antérieure au mois de diffusion) est utilisé pour calculer le CA.</em>
         </p>
     </section>
 

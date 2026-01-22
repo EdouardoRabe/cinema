@@ -194,13 +194,13 @@ CREATE TABLE film (
     CREATE TABLE societe (
         id SERIAL PRIMARY KEY,
         libelle TEXT NOT NULL UNIQUE,
-        cree_le TIMESTAMPTZ DEFAULT now()
+        cree_le TIMESTAMP DEFAULT now()
     );
 
     CREATE TABLE prix_publicite (
         id SERIAL PRIMARY KEY,
         prix NUMERIC(12,2) NOT NULL,
-        date_creation TIMESTAMPTZ DEFAULT now()
+        date_creation TIMESTAMP DEFAULT now()
     );
 
     CREATE TABLE publicite (
@@ -208,7 +208,7 @@ CREATE TABLE film (
         id_societe INT REFERENCES societe(id) ON DELETE CASCADE,
         nb_fois INT NOT NULL DEFAULT 1 CHECK (nb_fois > 0),
         date_diffusion DATE NOT NULL,
-        cree_le TIMESTAMPTZ DEFAULT now(),
+        cree_le TIMESTAMP DEFAULT now(),
         UNIQUE (id_societe, date_diffusion)
     );
 

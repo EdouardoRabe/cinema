@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
@@ -32,7 +32,7 @@ public class Publicite {
 
     @Column(name = "cree_le")
     @Builder.Default
-    private OffsetDateTime creeLe = OffsetDateTime.now();
+    private LocalDateTime creeLe = LocalDateTime.now();
 
     /**
      * Retourne l'année de la date de diffusion

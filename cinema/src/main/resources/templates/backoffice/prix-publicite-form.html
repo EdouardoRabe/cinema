@@ -8,9 +8,9 @@
         <div class="section-header">
             <h2 class="section-title">Définir un nouveau prix</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">📋 Diffusions</a>
-                <a th:href="@{/backoffice/societes}" class="btn btn-outline">🏢 Sociétés</a>
-                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-primary">💰 Prix</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-primary">Prix</a>
             </div>
         </div>
 
@@ -28,7 +28,7 @@
             </p>
         </div>
         <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 2rem;">
-            <strong>⚠</strong> Aucun prix n'est défini. Veuillez en créer un.
+            Aucun prix n'est défini. Veuillez en créer un.
         </div>
 
         <div class="form-card" style="background: var(--bg-card); padding: 2rem; border-radius: 12px;">

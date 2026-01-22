@@ -8,9 +8,9 @@
         <div class="section-header">
             <h2 class="section-title">Modifier la Diffusion</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">📋 Diffusions</a>
-                <a th:href="@{/backoffice/societes}" class="btn btn-outline">🏢 Sociétés</a>
-                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">💰 Prix</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
             </div>
         </div>
 
@@ -31,7 +31,7 @@
                 Prix par diffusion: <strong style="color: var(--gold);" th:text="${#numbers.formatDecimal(prixActuel, 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</strong>
             </p>
             <p th:if="${prixActuel == null}" style="margin: 0.5rem 0 0 0; color: var(--gold);">
-                ⚠ Aucun prix défini
+                Aucun prix défini
             </p>
         </div>
 

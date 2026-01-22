@@ -8,9 +8,9 @@
         <div class="section-header">
             <h2 class="section-title">Nouvelle Diffusion Publicitaire</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">📋 Diffusions</a>
-                <a th:href="@{/backoffice/societes}" class="btn btn-outline">🏢 Sociétés</a>
-                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">💰 Prix</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
             </div>
         </div>
 
@@ -24,7 +24,7 @@
 
         <!-- Alerte si pas de prix défini -->
         <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 1rem;">
-            <strong>⚠</strong> Aucun prix n'est défini. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a> pour pouvoir estimer le montant.
+            Aucun prix n'est défini. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a> pour pouvoir estimer le montant.
         </div>
 
         <div th:if="${prixActuel != null}" class="info-card" style="margin-bottom: 2rem; padding: 1rem; background: var(--bg-card); border-radius: 8px;">

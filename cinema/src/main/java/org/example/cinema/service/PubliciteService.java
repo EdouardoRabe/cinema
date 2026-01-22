@@ -185,4 +185,32 @@ public class PubliciteService {
                 "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"};
         return noms[mois - 1];
     }
+
+    /**
+     * Calcule le montant pour une publicité donnée
+     * Montant = nb_fois * prix_unitaire_du_mois
+     * Retourne null si pas de prix défini pour ce mois
+     */
+    public BigDecimal calculerMontant(Publicite pub) {
+        if (pub == null || pub.getDateDiffusion() == null) {
+            return null;
+        }
+        BigDecimal prixUnitaire = prixPubliciteService.getPrixPourMois(pub.getAnnee(), pub.getMois());
+        if (prixUnitaire == null) {
+            return null;
+        }
+        return prixUnitaire.multiply(new BigDecimal(pub.getNbFois()));
+    }
+
+    /**
+     * Crée une map des montants pour une liste de publicités
+     * Clé: ID de la publicité, Valeur: montant calculé
+     */
+    public Map<Long, BigDecimal> getMontantsMap(List<Publicite> publicites) {
+        Map<Long, BigDecimal> montants = new LinkedHashMap<>();
+        for (Publicite pub : publicites) {
+            montants.put(pub.getId(), calculerMontant(pub));
+        }
+        return montants;
+    }
 }

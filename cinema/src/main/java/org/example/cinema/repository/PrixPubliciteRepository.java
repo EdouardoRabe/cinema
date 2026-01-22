@@ -6,8 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -23,5 +22,5 @@ public interface PrixPubliciteRepository extends JpaRepository<PrixPublicite, Lo
      * Trouve le prix valide pour une date donnée (le plus récent avant ou égal à cette date)
      */
     @Query("SELECT p FROM PrixPublicite p WHERE p.dateCreation <= :date ORDER BY p.dateCreation DESC LIMIT 1")
-    Optional<PrixPublicite> findPrixValidAt(@Param("date") OffsetDateTime date);
+    Optional<PrixPublicite> findPrixValidAt(@Param("date") LocalDateTime date);
 }

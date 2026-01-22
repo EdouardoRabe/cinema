@@ -57,8 +57,11 @@ public class PubliciteBackofficeController {
             statsParMois = publiciteService.getStatistiquesParMois(annee);
         }
         
+        // Map des montants pour chaque publicité (calculés avec le prix du mois correspondant)
+        Map<Long, java.math.BigDecimal> montantsMap = publiciteService.getMontantsMap(publicites);
+        
         model.addAttribute("publicites", publicites);
-        model.addAttribute("annees", publiciteService.getAnneesDisponibles());
+        model.addAttribute("montantsMap", montantsMap);
         model.addAttribute("selectedAnnee", annee);
         model.addAttribute("selectedMois", mois);
         model.addAttribute("caDetail", caDetail);

@@ -9,9 +9,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 @Controller
 @RequestMapping("/backoffice/prix-publicite")
@@ -42,8 +39,7 @@ public class PrixPubliciteBackofficeController {
                        @RequestParam("dateCreation") String dateCreationStr,
                        RedirectAttributes ra) {
         try {
-            LocalDateTime localDateTime = LocalDateTime.parse(dateCreationStr);
-            OffsetDateTime dateCreation = localDateTime.atOffset(ZoneOffset.UTC);
+            LocalDateTime dateCreation = LocalDateTime.parse(dateCreationStr);
             prixPubliciteService.createNewPrix(prix, dateCreation);
             ra.addFlashAttribute("successMessage", "Nouveau prix enregistré avec succès");
         } catch (Exception e) {

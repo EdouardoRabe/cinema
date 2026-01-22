@@ -7,8 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,15 +46,16 @@ public class PrixPubliciteService {
     }
 
     /**
-     * Récupère le prix valide pour une date donnée (le 1er du mois)
+     * Récupère le prix valide pour un mois/année donné
+     * On prend le prix le plus récent dont la date_creation est <= dernier jour du mois de diffusion
      * Retourne null si aucun prix n'est défini pour cette période
      */
     public BigDecimal getPrixPourMois(int annee, int mois) {
-        // On prend le prix valide au 1er du mois
-        LocalDate premierDuMois = LocalDate.of(annee, mois, 1);
-        OffsetDateTime dateTime = premierDuMois.atStartOfDay().atOffset(ZoneOffset.UTC);
+        // On prend le dernier jour du mois à 23:59:59 pour inclure tous les prix créés pendant ce mois
+        LocalDate dernierJourDuMois = LocalDate.of(annee, mois, 1).plusMonths(1).minusDays(1);
+        LocalDateTime finDuMois = dernierJourDuMois.atTime(23, 59, 59);
         
-        return repository.findPrixValidAt(dateTime)
+        return repository.findPrixValidAt(finDuMois)
                 .map(PrixPublicite::getPrix)
                 .orElse(null);
     }
@@ -64,7 +64,7 @@ public class PrixPubliciteService {
      * Crée un nouveau prix avec une date spécifiée
      */
     @Transactional
-    public PrixPublicite createNewPrix(BigDecimal prix, OffsetDateTime dateCreation) {
+    public PrixPublicite createNewPrix(BigDecimal prix, LocalDateTime dateCreation) {
         PrixPublicite prixPublicite = PrixPublicite.builder()
                 .prix(prix)
                 .dateCreation(dateCreation)
