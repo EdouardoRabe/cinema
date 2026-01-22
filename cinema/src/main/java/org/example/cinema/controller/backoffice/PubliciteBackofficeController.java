@@ -119,7 +119,7 @@ public class PubliciteBackofficeController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model, RedirectAttributes ra) {
+    public String edit(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         var pubOpt = publiciteService.findById(id);
         if (pubOpt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Publicité introuvable");
@@ -135,7 +135,7 @@ public class PubliciteBackofficeController {
     }
 
     @PostMapping("/update/{id}")
-    public String update(@PathVariable Long id,
+    public String update(@PathVariable("id") Long id,
                          @RequestParam("nbFois") Integer nbFois,
                          RedirectAttributes ra) {
         var pubOpt = publiciteService.findById(id);
@@ -153,7 +153,7 @@ public class PubliciteBackofficeController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes ra) {
         publiciteService.deleteById(id);
         ra.addFlashAttribute("successMessage", "Diffusion supprimée avec succès");
         return "redirect:/backoffice/publicites";

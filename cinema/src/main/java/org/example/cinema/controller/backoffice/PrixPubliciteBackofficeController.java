@@ -52,7 +52,7 @@ public class PrixPubliciteBackofficeController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes ra) {
         prixPubliciteService.deleteById(id);
         ra.addFlashAttribute("successMessage", "Prix supprimé");
         return "redirect:/backoffice/prix-publicite";

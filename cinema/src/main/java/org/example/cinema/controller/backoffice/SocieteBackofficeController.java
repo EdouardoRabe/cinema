@@ -43,7 +43,7 @@ public class SocieteBackofficeController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model, RedirectAttributes ra) {
+    public String edit(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         var societeOpt = societeService.findById(id);
         if (societeOpt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Société introuvable");
@@ -54,7 +54,7 @@ public class SocieteBackofficeController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
             societeService.deleteById(id);
             ra.addFlashAttribute("successMessage", "Société supprimée avec succès");

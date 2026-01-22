@@ -33,7 +33,7 @@ public class PaiementPubliciteBackofficeController {
      * Affiche la page de paiement pour une publicité
      */
     @GetMapping("/{publiciteId}")
-    public String afficherPaiements(@PathVariable Long publiciteId, Model model, RedirectAttributes ra) {
+    public String afficherPaiements(@PathVariable("publiciteId") Long publiciteId, Model model, RedirectAttributes ra) {
         var pubOpt = publiciteService.findById(publiciteId);
         if (pubOpt.isEmpty()) {
             ra.addFlashAttribute("errorMessage", "Publicité introuvable");
@@ -62,7 +62,7 @@ public class PaiementPubliciteBackofficeController {
      * Enregistre un nouveau paiement
      */
     @PostMapping("/{publiciteId}/payer")
-    public String payer(@PathVariable Long publiciteId,
+    public String payer(@PathVariable("publiciteId") Long publiciteId,
                         @RequestParam("montant") BigDecimal montant,
                         RedirectAttributes ra) {
         try {
@@ -80,8 +80,8 @@ public class PaiementPubliciteBackofficeController {
      * Supprime un paiement
      */
     @PostMapping("/{publiciteId}/supprimer/{paiementId}")
-    public String supprimerPaiement(@PathVariable Long publiciteId,
-                                    @PathVariable Long paiementId,
+    public String supprimerPaiement(@PathVariable("publiciteId") Long publiciteId,
+                                    @PathVariable("paiementId") Long paiementId,
                                     RedirectAttributes ra) {
         try {
             paiementService.deleteById(paiementId);
