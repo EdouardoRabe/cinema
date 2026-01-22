@@ -39,7 +39,9 @@
                 <!-- Seat Selection -->
                 <div>
                     <h2 class="section-title mb-3">1. Choisissez vos <span>places</span></h2>
-                    <p style="color: #aaa; margin-bottom: 1rem; font-size: 0.9rem;">Cliquez sur une place pour la sélectionner, puis choisissez la catégorie.</p>
+                    <p style="color: #aaa; margin-bottom: 1rem; font-size: 0.9rem;">
+                        <strong>Cliquez</strong> sur une place ou <strong>maintenez et glissez</strong> pour sélectionner plusieurs places d'un coup.
+                    </p>
                     
                     <div class="seat-selection">
                         <!-- Screen -->
@@ -149,11 +151,13 @@
 
     <!-- Modal de sélection de catégorie -->
     <div id="categoryModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
-        <div class="modal-content" style="background: var(--bg-dark); padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%;">
+        <div class="modal-content" style="background: var(--bg-dark); padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%;">
             <h3 style="color: var(--primary); margin-bottom: 1rem;">Choisir la catégorie</h3>
             <p id="modalSeatInfo" style="color: #aaa; margin-bottom: 1.5rem;">Place A-1</p>
             
             <input type="hidden" id="modalPlaceId" value="">
+            <input type="hidden" id="modalPlaceIds" value="">
+            <input type="hidden" id="modalTypePlaceId" value="">
             
             <div class="category-options" style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div th:each="cat : ${categories}">
@@ -181,6 +185,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- Indicateur de sélection multiple -->
+    <div id="selectionIndicator" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 600; z-index: 100; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);">
+        <span id="selectionCount">0</span> place(s) sélectionnée(s)
+    </div>
 
     <!-- Footer -->
     <footer th:replace="~{fragments/layout :: footer}"></footer>
@@ -191,8 +200,14 @@
         // Données des catégories depuis la base de données
         var categoriesData = /*[[${categoriesJson}]]*/ {};
 
-        // Map pour stocker les places sélectionnées
+        // Map pour stocker les places sélectionnées (confirmées avec catégorie)
         var selectedSeatsMap = {};
+        
+        // Variables pour la sélection par glissement
+        var isDragging = false;
+        var dragStartTime = 0;
+        var currentDragSelection = []; // Places temporairement sélectionnées pendant le drag
+        var dragTypePlaceId = null; // Type de place du premier élément sélectionné
         
         // Attendre que le DOM soit chargé
         document.addEventListener('DOMContentLoaded', function() {
@@ -200,11 +215,29 @@
         });
         
         function initReservationPage() {
-            // Ajouter les event listeners sur les sièges
             var seats = document.querySelectorAll('.seat:not(.taken)');
+            
+            // Événements pour la sélection par glissement
             for (var i = 0; i < seats.length; i++) {
-                seats[i].addEventListener('click', handleSeatClick);
+                // Mouse events
+                seats[i].addEventListener('mousedown', handleDragStart);
+                seats[i].addEventListener('mouseenter', handleDragOver);
+                seats[i].addEventListener('mouseup', handleDragEnd);
+                
+                // Touch events pour mobile
+                seats[i].addEventListener('touchstart', handleTouchStart, { passive: false });
+                seats[i].addEventListener('touchmove', handleTouchMove, { passive: false });
+                seats[i].addEventListener('touchend', handleTouchEnd);
             }
+            
+            // Événement global pour terminer le drag si on relâche en dehors
+            document.addEventListener('mouseup', handleGlobalMouseUp);
+            document.addEventListener('touchend', handleGlobalTouchEnd);
+            
+            // Empêcher la sélection de texte pendant le drag
+            document.querySelector('.seats-container').addEventListener('selectstart', function(e) {
+                if (isDragging) e.preventDefault();
+            });
             
             // Ajouter les event listeners sur les options de catégorie
             var categoryOptions = document.querySelectorAll('.category-option');
@@ -228,7 +261,7 @@
                 removeBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    removeSeatFromModal();
+                    removeSeatsFromModal();
                 });
             }
             
@@ -243,41 +276,174 @@
             }
         }
         
-        function handleSeatClick(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            openCategoryModal(this);
-        }
+        // ==================== DRAG SELECTION ====================
         
-        function handleCategoryClick(e) {
+        function handleDragStart(e) {
             e.preventDefault();
-            e.stopPropagation();
-            selectCategory(this);
-        }
-        
-        function openCategoryModal(seatElement) {
-            if (seatElement.classList.contains('taken')) return;
+            if (this.classList.contains('taken')) return;
             
+            isDragging = true;
+            dragStartTime = Date.now();
+            currentDragSelection = [];
+            dragTypePlaceId = this.getAttribute('data-type-place');
+            
+            addToDragSelection(this);
+            updateSelectionIndicator();
+        }
+        
+        function handleDragOver(e) {
+            if (!isDragging) return;
+            if (this.classList.contains('taken')) return;
+            
+            var typePlaceId = this.getAttribute('data-type-place');
+            
+            // Vérifier si c'est le même type de place
+            if (typePlaceId !== dragTypePlaceId) {
+                // Afficher une indication visuelle que cette place ne peut pas être ajoutée
+                this.classList.add('drag-invalid');
+                setTimeout(function() {
+                    this.classList.remove('drag-invalid');
+                }.bind(this), 300);
+                return;
+            }
+            
+            addToDragSelection(this);
+            updateSelectionIndicator();
+        }
+        
+        function handleDragEnd(e) {
+            if (!isDragging) return;
+            finalizeDragSelection();
+        }
+        
+        function handleGlobalMouseUp(e) {
+            if (isDragging) {
+                finalizeDragSelection();
+            }
+        }
+        
+        // Touch events pour mobile
+        function handleTouchStart(e) {
+            e.preventDefault();
+            handleDragStart.call(this, e);
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            var touch = e.touches[0];
+            var element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('seat') && !element.classList.contains('taken')) {
+                handleDragOver.call(element, e);
+            }
+        }
+        
+        function handleTouchEnd(e) {
+            handleDragEnd.call(this, e);
+        }
+        
+        function handleGlobalTouchEnd(e) {
+            if (isDragging) {
+                finalizeDragSelection();
+            }
+        }
+        
+        function addToDragSelection(seatElement) {
             var placeId = seatElement.getAttribute('data-id');
-            var numero = seatElement.getAttribute('data-numero');
-            var row = seatElement.getAttribute('data-row');
-            var typePlaceId = seatElement.getAttribute('data-type-place');
             
-            document.getElementById('modalPlaceId').value = placeId;
-            document.getElementById('modalSeatInfo').textContent = 'Place ' + row + '-' + numero;
+            // Éviter les doublons
+            if (currentDragSelection.some(function(s) { return s.id === placeId; })) {
+                return;
+            }
+            
+            currentDragSelection.push({
+                id: placeId,
+                element: seatElement,
+                row: seatElement.getAttribute('data-row'),
+                numero: seatElement.getAttribute('data-numero'),
+                typePlaceId: seatElement.getAttribute('data-type-place'),
+                typeLibelle: seatElement.getAttribute('data-type-libelle')
+            });
+            
+            // Marquer visuellement comme en cours de sélection
+            seatElement.classList.add('drag-selecting');
+        }
+        
+        function updateSelectionIndicator() {
+            var indicator = document.getElementById('selectionIndicator');
+            var countSpan = document.getElementById('selectionCount');
+            
+            if (currentDragSelection.length > 0) {
+                indicator.style.display = 'block';
+                countSpan.textContent = currentDragSelection.length;
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+        
+        function finalizeDragSelection() {
+            isDragging = false;
+            
+            // Nettoyer les classes de sélection temporaire
+            currentDragSelection.forEach(function(seat) {
+                seat.element.classList.remove('drag-selecting');
+            });
+            
+            // Cacher l'indicateur
+            document.getElementById('selectionIndicator').style.display = 'none';
+            
+            if (currentDragSelection.length === 0) return;
+            
+            // Vérifier si c'était un clic simple (moins de 200ms et une seule place)
+            var dragDuration = Date.now() - dragStartTime;
+            var isSimpleClick = dragDuration < 200 && currentDragSelection.length === 1;
+            
+            // Ouvrir le modal avec les places sélectionnées
+            openCategoryModalForMultiple(currentDragSelection);
+            
+            currentDragSelection = [];
+            dragTypePlaceId = null;
+        }
+        
+        // ==================== MODAL ====================
+        
+        function openCategoryModalForMultiple(seatsArray) {
+            if (seatsArray.length === 0) return;
+            
+            var placeIds = seatsArray.map(function(s) { return s.id; });
+            var typePlaceId = seatsArray[0].typePlaceId;
+            var typeLibelle = seatsArray[0].typeLibelle || 'Standard';
+            
+            document.getElementById('modalPlaceIds').value = placeIds.join(',');
+            document.getElementById('modalPlaceId').value = placeIds[0]; // Pour compatibilité
+            document.getElementById('modalTypePlaceId').value = typePlaceId;
+            
+            // Construire le texte d'information
+            var infoText;
+            if (seatsArray.length === 1) {
+                infoText = 'Place ' + seatsArray[0].row + '-' + seatsArray[0].numero + ' (' + typeLibelle + ')';
+            } else {
+                var placesList = seatsArray.map(function(s) { return s.row + '-' + s.numero; }).join(', ');
+                infoText = seatsArray.length + ' places sélectionnées (' + typeLibelle + ')<br><small style="color: #888;">' + placesList + '</small>';
+            }
+            document.getElementById('modalSeatInfo').innerHTML = infoText;
 
-            // Mettre à jour les prix affichés dans le modal selon le type de place sélectionné
+            // Mettre à jour les prix affichés dans le modal selon le type de place
             var optionElements = document.querySelectorAll('.category-option');
             optionElements.forEach(function(opt) {
                 var catId = opt.getAttribute('data-id');
                 var priceSpan = opt.querySelector('.category-price');
                 var prices = categoriesData[catId] && categoriesData[catId].prices;
-                var price = prices && prices[typePlaceId];
+                var unitPrice = prices && prices[typePlaceId];
 
-                if (price != null) {
+                if (unitPrice != null) {
                     opt.classList.remove('disabled');
-                    opt.setAttribute('data-price', price);
-                    priceSpan.textContent = price.toLocaleString('fr-FR') + ' Ar';
+                    opt.setAttribute('data-price', unitPrice);
+                    var totalPrice = unitPrice * seatsArray.length;
+                    if (seatsArray.length > 1) {
+                        priceSpan.innerHTML = unitPrice.toLocaleString('fr-FR') + ' Ar/place<br><strong style="color: var(--gold);">' + totalPrice.toLocaleString('fr-FR') + ' Ar total</strong>';
+                    } else {
+                        priceSpan.textContent = unitPrice.toLocaleString('fr-FR') + ' Ar';
+                    }
                 } else {
                     opt.classList.add('disabled');
                     opt.setAttribute('data-price', '');
@@ -285,82 +451,82 @@
                 }
             });
             
-            // Afficher le bouton "Retirer" si la place est déjà sélectionnée
+            // Afficher/cacher le bouton "Retirer" selon si des places sont déjà confirmées
             var removeSeatBtn = document.getElementById('removeSeatBtn');
-            var existing = selectedSeatsMap[placeId];
-            if (existing) {
+            var anyExisting = placeIds.some(function(id) { return selectedSeatsMap[id]; });
+            
+            if (anyExisting) {
                 removeSeatBtn.style.display = 'block';
-                // Mettre en surbrillance la catégorie actuellement sélectionnée
-                var options = document.querySelectorAll('.category-option');
-                for (var i = 0; i < options.length; i++) {
-                    if (options[i].getAttribute('data-id') === String(existing.categorieId)) {
-                        options[i].classList.add('selected');
-                    } else {
-                        options[i].classList.remove('selected');
-                    }
-                }
+                removeSeatBtn.textContent = seatsArray.length > 1 ? 'Retirer les ' + seatsArray.length + ' places' : 'Retirer';
             } else {
                 removeSeatBtn.style.display = 'none';
-                var opts = document.querySelectorAll('.category-option');
-                for (var k = 0; k < opts.length; k++) {
-                    opts[k].classList.remove('selected');
-                }
+            }
+            
+            // Reset la sélection de catégorie
+            var opts = document.querySelectorAll('.category-option');
+            for (var k = 0; k < opts.length; k++) {
+                opts[k].classList.remove('selected');
             }
             
             document.getElementById('categoryModal').style.display = 'flex';
         }
         
-        function closeCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'none';
+        function handleCategoryClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            selectCategoryForMultiple(this);
         }
         
-        function selectCategory(element) {
-            var placeId = document.getElementById('modalPlaceId').value;
+        function selectCategoryForMultiple(element) {
+            if (element.classList.contains('disabled')) return;
+            
+            var placeIdsStr = document.getElementById('modalPlaceIds').value;
+            var placeIds = placeIdsStr.split(',');
             var categorieId = element.getAttribute('data-id');
             var categorieName = element.getAttribute('data-name');
-            if (element.classList.contains('disabled')) {
-                return;
-            }
+            var unitPrice = parseInt(element.getAttribute('data-price'));
 
-            var price = parseInt(element.getAttribute('data-price'));
+            placeIds.forEach(function(placeId) {
+                var seatElement = document.querySelector('.seat[data-id="' + placeId + '"]');
+                if (!seatElement) return;
+                
+                var row = seatElement.getAttribute('data-row');
+                var numero = seatElement.getAttribute('data-numero');
 
-            // Trouver l'élément de la place
-            var seatElement = document.querySelector('.seat[data-id="' + placeId + '"]');
-            if (!seatElement) {
-                console.error('Seat not found:', placeId);
-                return;
-            }
-            
-            var row = seatElement.getAttribute('data-row');
-            var numero = seatElement.getAttribute('data-numero');
+                selectedSeatsMap[placeId] = {
+                    categorieId: String(categorieId),
+                    categorieName: categorieName,
+                    price: unitPrice,
+                    row: row,
+                    numero: numero
+                };
 
-            // Ajouter ou mettre à jour la sélection (les places existantes sont PRÉSERVÉES)
-            selectedSeatsMap[placeId] = {
-                categorieId: String(categorieId),
-                categorieName: categorieName,
-                price: price,
-                row: row,
-                numero: numero
-            };
+                seatElement.classList.add('selected');
+            });
 
-            // Visually mark the selected category in the modal
+            // Marquer la catégorie sélectionnée
             var options = document.querySelectorAll('.category-option');
             for (var i = 0; i < options.length; i++) {
                 options[i].classList.remove('selected');
             }
             element.classList.add('selected');
 
-            // Marquer le siège comme sélectionné
-            seatElement.classList.add('selected');
-
-            // Fermer le modal et mettre à jour le récapitulatif
             closeCategoryModal();
             updateReservationSummary();
         }
         
-        function removeSeatFromModal() {
-            var placeId = document.getElementById('modalPlaceId').value;
-            removeSeat(placeId);
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+        
+        function removeSeatsFromModal() {
+            var placeIdsStr = document.getElementById('modalPlaceIds').value;
+            var placeIds = placeIdsStr.split(',');
+            
+            placeIds.forEach(function(placeId) {
+                removeSeat(placeId);
+            });
+            
             closeCategoryModal();
         }
         
@@ -375,12 +541,10 @@
         
         function updateReservationSummary() {
             var container = document.getElementById('seatsListContainer');
-            var noSeatsMsg = document.getElementById('noSeatsMessage');
             var summarySeats = document.getElementById('summarySeats');
             var totalPriceEl = document.getElementById('totalPrice');
             var selectedSeatsInput = document.getElementById('selectedSeats');
             
-            // Vider le conteneur
             container.innerHTML = '';
             
             var seatKeys = Object.keys(selectedSeatsMap);
@@ -396,17 +560,52 @@
             var total = 0;
             var seatsData = [];
             
-            for (var i = 0; i < seatKeys.length; i++) {
-                var placeId = seatKeys[i];
+            // Grouper par catégorie pour un affichage plus compact
+            var byCategory = {};
+            seatKeys.forEach(function(placeId) {
                 var data = selectedSeatsMap[placeId];
+                var catKey = data.categorieId + '_' + data.categorieName + '_' + data.price;
+                if (!byCategory[catKey]) {
+                    byCategory[catKey] = {
+                        categorieName: data.categorieName,
+                        price: data.price,
+                        seats: []
+                    };
+                }
+                byCategory[catKey].seats.push({
+                    placeId: placeId,
+                    row: data.row,
+                    numero: data.numero
+                });
                 total += data.price;
                 seatsData.push(placeId + ':' + data.categorieId);
+            });
+            
+            // Afficher par groupe
+            Object.keys(byCategory).forEach(function(catKey) {
+                var group = byCategory[catKey];
+                var groupTotal = group.price * group.seats.length;
                 
-                var seatItem = document.createElement('div');
-                seatItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-card); border-radius: 8px;';
-                seatItem.innerHTML = '<span style="display: flex; align-items: center; gap: 0.5rem;"><strong>Place ' + data.row + '-' + data.numero + '</strong><span style="color: #aaa; font-size: 0.85rem;">(' + data.categorieName + ')</span></span><span style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--primary);">' + data.price.toLocaleString('fr-FR') + ' Ar</span><button type="button" data-place-id="' + placeId + '" class="remove-seat-btn" style="background: #ff5252; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button></span>';
-                container.appendChild(seatItem);
-            }
+                var groupDiv = document.createElement('div');
+                groupDiv.style.cssText = 'padding: 0.75rem; background: var(--bg-card); border-radius: 8px; margin-bottom: 0.5rem;';
+                
+                var headerHtml = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">';
+                headerHtml += '<strong>' + group.seats.length + 'x ' + group.categorieName + '</strong>';
+                headerHtml += '<span style="color: var(--primary);">' + groupTotal.toLocaleString('fr-FR') + ' Ar</span>';
+                headerHtml += '</div>';
+                
+                var seatsHtml = '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
+                group.seats.forEach(function(seat) {
+                    seatsHtml += '<span class="seat-badge" data-place-id="' + seat.placeId + '" style="background: var(--bg-dark); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">';
+                    seatsHtml += seat.row + '-' + seat.numero;
+                    seatsHtml += '<button type="button" class="remove-seat-btn" data-place-id="' + seat.placeId + '" style="background: none; border: none; color: #ff5252; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 0.25rem;">×</button>';
+                    seatsHtml += '</span>';
+                });
+                seatsHtml += '</div>';
+                
+                groupDiv.innerHTML = headerHtml + seatsHtml;
+                container.appendChild(groupDiv);
+            });
             
             // Ajouter les event listeners sur les boutons de suppression
             var removeBtns = container.querySelectorAll('.remove-seat-btn');
@@ -430,7 +629,6 @@
                 alert('Veuillez sélectionner au moins une place et choisir une catégorie.');
                 return false;
             }
-            // Validate format: each entry must be placeId:categorieId
             var entries = selectedSeats.split(',');
             for (var i = 0; i < entries.length; i++) {
                 var e = entries[i].trim();
@@ -448,5 +646,69 @@
             return true;
         }
     </script>
+    
+    <style>
+        /* Styles pour la sélection par glissement */
+        .seat.drag-selecting {
+            transform: scale(1.15);
+            box-shadow: 0 0 15px var(--gold);
+            border-color: var(--gold) !important;
+            z-index: 10;
+        }
+        
+        .seat.drag-invalid {
+            animation: shake 0.3s ease-in-out;
+            border-color: #ff5252 !important;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .seat {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+        }
+        
+        .seat:hover:not(.taken):not(.selected) {
+            transform: scale(1.1);
+        }
+        
+        .category-option {
+            transition: all 0.2s ease;
+        }
+        
+        .category-option:hover:not(.disabled) {
+            border-color: var(--primary) !important;
+            transform: translateX(5px);
+        }
+        
+        .category-option.selected {
+            border-color: var(--gold) !important;
+            background: rgba(255, 193, 7, 0.1) !important;
+        }
+        
+        .category-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .seat-badge:hover {
+            background: var(--bg-card) !important;
+        }
+        
+        #selectionIndicator {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+    </style>
 </body>
 </html>

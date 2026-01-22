@@ -43,15 +43,9 @@ public class TarifSeance {
     @JoinColumn(name = "id_categorie_personne")
     private CategoriePersonne categoriePersonne;
 
-    /**
-     * Prix en Ariary. Si NULL, le prix est calculé via la table remise.
-     */
     @Column(precision = 10, scale = 2)
     private BigDecimal prix;
     
-    /**
-     * Date de création pour garder l'historique et prendre le plus récent
-     */
     @Column(name = "date_creation")
     @Builder.Default
     private LocalDateTime dateCreation = LocalDateTime.now();

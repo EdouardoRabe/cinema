@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Sociétés')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Sociétés</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-primary">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
+                <a th:href="@{/backoffice/societes/create}" class="btn btn-gold">+ Nouvelle</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Libellé</th>
+                        <th>Date de création</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="societe : ${societes}">
+                        <td th:text="${societe.id}">1</td>
+                        <td th:text="${societe.libelle}">Société X</td>
+                        <td th:text="${societe.creeLe != null ? #temporals.format(societe.creeLe, 'dd/MM/yyyy HH:mm') : '-'}">01/01/2026</td>
+                        <td>
+                            <a th:href="@{/backoffice/societes/edit/{id}(id=${societe.id})}" class="btn btn-primary btn-sm">Éditer</a>
+                            <form th:action="@{/backoffice/societes/delete/{id}(id=${societe.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette société ?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(societes)}">
+                        <td colspan="4" style="text-align: center; color: #aaa;">Aucune société enregistrée</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .pub-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-gold {
+            background: var(--gold);
+            color: var(--bg-dark);
+            font-weight: 600;
+        }
+        .btn-gold:hover {
+            background: var(--gold-light);
+        }
+    </style>
+</body>
+</html>

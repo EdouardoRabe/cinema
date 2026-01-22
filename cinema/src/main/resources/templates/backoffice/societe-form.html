@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Société')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${societe.id != null ? 'Modifier la société' : 'Nouvelle société'}">Société</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-primary">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="form-card" style="background: var(--bg-card); padding: 2rem; border-radius: 12px;">
+            <form th:action="@{/backoffice/societes/save}" method="post">
+                <input type="hidden" th:if="${societe.id != null}" name="id" th:value="${societe.id}">
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="libelle" class="form-label">Nom de la société *</label>
+                    <input type="text" id="libelle" name="libelle" th:value="${societe.libelle}" required 
+                           class="form-input" placeholder="Ex: Coca-Cola Madagascar">
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:text="${societe.id != null ? 'Mettre à jour' : 'Créer'}">Enregistrer</span>
+                    </button>
+                    <a th:href="@{/backoffice/societes}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .pub-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+    </style>
+</body>
+</html>

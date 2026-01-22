@@ -3,7 +3,7 @@ package org.example.cinema.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "historique_statut_reservation")
@@ -23,7 +23,7 @@ public class HistoriqueStatutReservation {
     private StatutReservation statut;
 
     @Column(name = "date_changement")
-    private OffsetDateTime dateChangement;
+    private LocalDateTime dateChangement;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "change_par")
@@ -33,6 +33,6 @@ public class HistoriqueStatutReservation {
 
     @PrePersist
     protected void onCreate() {
-        if (dateChangement == null) dateChangement = OffsetDateTime.now();
+        if (dateChangement == null) dateChangement = LocalDateTime.now();
     }
 }

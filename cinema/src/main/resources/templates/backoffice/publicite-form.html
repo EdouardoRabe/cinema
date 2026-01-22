@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle Diffusion')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Nouvelle Diffusion Publicitaire</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="form-card">
+            <form th:action="@{/backoffice/publicites/save}" method="post">
+                <div class="form-group">
+                    <label for="societeId" class="form-label">Société *</label>
+                    <select id="societeId" name="societeId" required class="form-input">
+                        <option value="">-- Sélectionner une société --</option>
+                        <option th:each="s : ${societes}" th:value="${s.id}" th:text="${s.libelle}">Société X</option>
+                    </select>
+                    <small class="form-hint">
+                        Société non listée ? <a th:href="@{/backoffice/societes/create}" style="color: var(--primary);">Créer une nouvelle société</a>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateDiffusion" class="form-label">Mois de diffusion *</label>
+                    <input type="month" id="dateDiffusion" name="dateDiffusion" required class="form-input">
+                    <small class="form-hint">Si une diffusion existe déjà pour ce mois, le nombre de diffusions sera mis à jour.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="nbFois" class="form-label">Nombre de diffusions *</label>
+                    <input type="number" id="nbFois" name="nbFois" required min="1" value="1" class="form-input">
+                </div>
+
+                <div id="estimationContainer" class="form-group" style="padding: 1rem; background: var(--bg-dark); border-radius: 8px; display: none;">
+                    <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Estimation du montant</label>
+                    <p style="margin: 0 0 0.5rem 0; color: #aaa; font-size: 0.9rem;">
+                        Prix unitaire: <span id="prixUnitaireDisplay">-</span> Ar
+                    </p>
+                    <p id="estimationMontant" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gold);">
+                        - Ar
+                    </p>
+                </div>
+                
+                <div id="prixNonDefiniAlert" class="alert alert-warning" style="display: none; margin-bottom: 1rem;">
+                    Aucun prix n'est défini pour ce mois. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enregistrer la diffusion</button>
+                    <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .pub-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+        }
+        .form-hint {
+            display: block;
+            margin-top: 0.5rem;
+            color: #888;
+            font-size: 0.875rem;
+        }
+        .alert-warning {
+            padding: 1rem;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            color: var(--gold);
+        }
+        .alert-warning a {
+            color: var(--gold);
+            text-decoration: underline;
+        }
+    </style>
+    
+    <script>
+        var prixUnitaire = null;
+        
+        function formatNumber(num) {
+            return num.toLocaleString('fr-FR');
+        }
+        
+        function updateEstimation() {
+            var nbFois = parseInt(document.getElementById('nbFois').value) || 0;
+            var estimationContainer = document.getElementById('estimationContainer');
+            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+            
+            if (prixUnitaire !== null && prixUnitaire > 0) {
+                var total = nbFois * prixUnitaire;
+                document.getElementById('prixUnitaireDisplay').textContent = formatNumber(prixUnitaire);
+                document.getElementById('estimationMontant').textContent = formatNumber(total) + ' Ar';
+                estimationContainer.style.display = 'block';
+                prixNonDefiniAlert.style.display = 'none';
+            } else {
+                estimationContainer.style.display = 'none';
+            }
+        }
+        
+        function fetchPrixPourMois() {
+            var dateDiffusion = document.getElementById('dateDiffusion').value;
+            var estimationContainer = document.getElementById('estimationContainer');
+            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+            
+            if (!dateDiffusion) {
+                prixUnitaire = null;
+                estimationContainer.style.display = 'none';
+                prixNonDefiniAlert.style.display = 'none';
+                return;
+            }
+            
+            var parts = dateDiffusion.split('-');
+            var annee = parseInt(parts[0]);
+            var mois = parseInt(parts[1]);
+            
+            fetch('/backoffice/prix-publicite/api/prix-pour-mois?annee=' + annee + '&mois=' + mois)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prixDefini && data.prix !== null) {
+                        prixUnitaire = data.prix;
+                        prixNonDefiniAlert.style.display = 'none';
+                    } else {
+                        prixUnitaire = null;
+                        prixNonDefiniAlert.style.display = 'block';
+                    }
+                    updateEstimation();
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération du prix:', error);
+                    prixUnitaire = null;
+                    estimationContainer.style.display = 'none';
+                });
+        }
+        
+        document.getElementById('dateDiffusion').addEventListener('change', fetchPrixPourMois);
+        document.getElementById('nbFois').addEventListener('input', updateEstimation);
+    </script>
+</body>
+</html>
