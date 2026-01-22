@@ -4,12 +4,15 @@ import org.example.cinema.model.Publicite;
 import org.example.cinema.service.PubliciteService;
 import org.example.cinema.service.SocieteService;
 import org.example.cinema.service.PrixPubliciteService;
+import org.example.cinema.service.PaiementPubliciteService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,13 +23,16 @@ public class PubliciteBackofficeController {
     private final PubliciteService publiciteService;
     private final SocieteService societeService;
     private final PrixPubliciteService prixPubliciteService;
+    private final PaiementPubliciteService paiementPubliciteService;
 
     public PubliciteBackofficeController(PubliciteService publiciteService, 
                                          SocieteService societeService,
-                                         PrixPubliciteService prixPubliciteService) {
+                                         PrixPubliciteService prixPubliciteService,
+                                         PaiementPubliciteService paiementPubliciteService) {
         this.publiciteService = publiciteService;
         this.societeService = societeService;
         this.prixPubliciteService = prixPubliciteService;
+        this.paiementPubliciteService = paiementPubliciteService;
     }
 
     @GetMapping
@@ -45,23 +51,42 @@ public class PubliciteBackofficeController {
             publicites = publiciteService.findAll();
         }
         
-        // Calcul du CA pour le filtre actuel
+        // Calcul du CA pour le filtre actuel (basé sur les paiements)
         Map<String, Object> caDetail = null;
         if (annee != null && mois != null) {
             caDetail = publiciteService.getDetailCAPourMois(annee, mois);
+            // Ajouter le CA réel (paiements effectués)
+            BigDecimal caReel = paiementPubliciteService.getCAPourMois(annee, mois);
+            caDetail.put("caReel", caReel);
         }
         
         // Statistiques par mois si une année est sélectionnée
         List<Map<String, Object>> statsParMois = null;
         if (annee != null) {
             statsParMois = publiciteService.getStatistiquesParMois(annee);
+            // Ajouter le CA réel à chaque mois
+            for (Map<String, Object> stat : statsParMois) {
+                Integer m = (Integer) stat.get("mois");
+                BigDecimal caReel = paiementPubliciteService.getCAPourMois(annee, m);
+                stat.put("caReel", caReel);
+            }
         }
         
         // Map des montants pour chaque publicité (calculés avec le prix du mois correspondant)
         Map<Long, java.math.BigDecimal> montantsMap = publiciteService.getMontantsMap(publicites);
         
+        // Map des restes à payer pour chaque publicité
+        Map<Long, BigDecimal> restesAPayerMap = new LinkedHashMap<>();
+        Map<Long, BigDecimal> totalPayeMap = new LinkedHashMap<>();
+        for (Publicite pub : publicites) {
+            restesAPayerMap.put(pub.getId(), paiementPubliciteService.getResteAPayer(pub));
+            totalPayeMap.put(pub.getId(), paiementPubliciteService.getTotalPaye(pub.getId()));
+        }
+        
         model.addAttribute("publicites", publicites);
         model.addAttribute("montantsMap", montantsMap);
+        model.addAttribute("restesAPayerMap", restesAPayerMap);
+        model.addAttribute("totalPayeMap", totalPayeMap);
         model.addAttribute("selectedAnnee", annee);
         model.addAttribute("selectedMois", mois);
         model.addAttribute("caDetail", caDetail);

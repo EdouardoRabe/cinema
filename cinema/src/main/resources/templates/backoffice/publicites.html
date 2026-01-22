@@ -80,9 +80,17 @@
                     </p>
                 </div>
                 <div style="text-align: right;">
-                    <p th:if="${caDetail.ca != null}" style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--gold);">
-                        <span th:text="${#numbers.formatDecimal(caDetail.ca, 0, 'COMMA', 0, 'POINT')}">3,000,000</span> Ar
-                    </p>
+                    <div th:if="${caDetail.caReel != null}">
+                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--gold);">
+                            <span th:text="${#numbers.formatDecimal(caDetail.caReel, 0, 'COMMA', 0, 'POINT')}">0</span> Ar
+                        </p>
+                        <p style="margin: 0; font-size: 0.85rem; color: #888;">CA Reel (paiements)</p>
+                    </div>
+                    <div th:if="${caDetail.ca != null}" style="margin-top: 0.5rem;">
+                        <p style="margin: 0; font-size: 1rem; color: #aaa;">
+                            Montant attendu: <span th:text="${#numbers.formatDecimal(caDetail.ca, 0, 'COMMA', 0, 'POINT')}">3,000,000</span> Ar
+                        </p>
+                    </div>
                     <p th:if="${caDetail.ca == null}" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #888;">
                         CA non calculable
                     </p>
@@ -99,8 +107,11 @@
                     <p style="margin: 0 0 0.25rem 0; color: #aaa; font-size: 0.9rem;">
                         <span th:text="${stat.totalDiffusions}">10</span> diffusions
                     </p>
-                    <p th:if="${stat.ca != null}" style="margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--gold);">
-                        <span th:text="${#numbers.formatDecimal(stat.ca, 0, 'COMMA', 0, 'POINT')}">2,000,000</span> Ar
+                    <p th:if="${stat.caReel != null}" style="margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--gold);">
+                        <span th:text="${#numbers.formatDecimal(stat.caReel, 0, 'COMMA', 0, 'POINT')}">0</span> Ar
+                    </p>
+                    <p th:if="${stat.ca != null}" style="margin: 0 0 0 0; font-size: 0.85rem; color: #888;">
+                        Attendu: <span th:text="${#numbers.formatDecimal(stat.ca, 0, 'COMMA', 0, 'POINT')}">2,000,000</span> Ar
                     </p>
                     <p th:if="${stat.ca == null}" style="margin: 0; font-size: 1rem; color: #888;">
                         Prix non défini
@@ -120,6 +131,8 @@
                         <th>Mois</th>
                         <th>Nb diffusions</th>
                         <th>Montant</th>
+                        <th>Payé</th>
+                        <th>Reste à payer</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -135,7 +148,20 @@
                             <span th:if="${montantsMap[pub.id] != null}" th:text="${#numbers.formatDecimal(montantsMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
                             <span th:if="${montantsMap[pub.id] == null}" style="color: #888;">-</span>
                         </td>
+                        <td style="color: #4caf50;">
+                            <span th:if="${totalPayeMap[pub.id] != null}" th:text="${#numbers.formatDecimal(totalPayeMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</span>
+                            <span th:if="${totalPayeMap[pub.id] == null}" style="color: #888;">-</span>
+                        </td>
                         <td>
+                            <span th:if="${restesAPayerMap[pub.id] != null && restesAPayerMap[pub.id] > 0}" 
+                                  style="color: #f44336; font-weight: 600;"
+                                  th:text="${#numbers.formatDecimal(restesAPayerMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">500,000 Ar</span>
+                            <span th:if="${restesAPayerMap[pub.id] != null && restesAPayerMap[pub.id] <= 0}" 
+                                  style="color: #4caf50; font-weight: 600;">Soldé</span>
+                            <span th:if="${restesAPayerMap[pub.id] == null}" style="color: #888;">-</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/backoffice/paiements-publicite/{id}(id=${pub.id})}" class="btn btn-success btn-sm">Payer</a>
                             <a th:href="@{/backoffice/publicites/edit/{id}(id=${pub.id})}" class="btn btn-primary btn-sm">Éditer</a>
                             <form th:action="@{/backoffice/publicites/delete/{id}(id=${pub.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette diffusion ?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
@@ -143,7 +169,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(publicites)}">
-                        <td colspan="6" style="text-align: center; color: #aaa;">Aucune diffusion publicitaire enregistrée</td>
+                        <td colspan="8" style="text-align: center; color: #aaa;">Aucune diffusion publicitaire enregistrée</td>
                     </tr>
                 </tbody>
             </table>
@@ -188,6 +214,13 @@
         .alert-warning a {
             color: var(--gold);
             text-decoration: underline;
+        }
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #43a047;
         }
     </style>
 </body>

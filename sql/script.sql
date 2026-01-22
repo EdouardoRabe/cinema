@@ -214,3 +214,11 @@ CREATE TABLE film (
 
     CREATE INDEX idx_publicite_date ON publicite(date_diffusion);
 
+    CREATE TABLE paiement_publicite (
+        id SERIAL PRIMARY KEY,
+        id_publicite INT REFERENCES publicite(id) ON DELETE CASCADE,
+        montant NUMERIC(12,2) NOT NULL CHECK (montant > 0),
+        date_paiement TIMESTAMP DEFAULT now()
+    );
+
+    CREATE INDEX idx_paiement_publicite ON paiement_publicite(id_publicite);
