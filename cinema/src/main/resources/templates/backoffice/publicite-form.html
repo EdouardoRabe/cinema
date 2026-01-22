@@ -22,17 +22,6 @@
             <strong>✕</strong> <span th:text="${errorMessage}"></span>
         </div>
 
-        <!-- Alerte si pas de prix défini -->
-        <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 1rem;">
-            Aucun prix n'est défini. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a> pour pouvoir estimer le montant.
-        </div>
-
-        <div th:if="${prixActuel != null}" class="info-card" style="margin-bottom: 2rem; padding: 1rem; background: var(--bg-card); border-radius: 8px;">
-            <p style="margin: 0; color: #aaa;">
-                Prix par diffusion: <strong style="color: var(--gold);" th:text="${#numbers.formatDecimal(prixActuel, 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</strong>
-            </p>
-        </div>
-
         <div class="form-card">
             <form th:action="@{/backoffice/publicites/save}" method="post">
                 <div class="form-group">
@@ -57,11 +46,18 @@
                     <input type="number" id="nbFois" name="nbFois" required min="1" value="1" class="form-input">
                 </div>
 
-                <div th:if="${prixActuel != null}" class="form-group" style="padding: 1rem; background: var(--bg-dark); border-radius: 8px;">
+                <div id="estimationContainer" class="form-group" style="padding: 1rem; background: var(--bg-dark); border-radius: 8px; display: none;">
                     <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Estimation du montant</label>
-                    <p id="estimationMontant" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gold);">
-                        <span th:text="${#numbers.formatDecimal(prixActuel, 0, 'COMMA', 0, 'POINT')}">200,000</span> Ar
+                    <p style="margin: 0 0 0.5rem 0; color: #aaa; font-size: 0.9rem;">
+                        Prix unitaire: <span id="prixUnitaireDisplay">-</span> Ar
                     </p>
+                    <p id="estimationMontant" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gold);">
+                        - Ar
+                    </p>
+                </div>
+                
+                <div id="prixNonDefiniAlert" class="alert alert-warning" style="display: none; margin-bottom: 1rem;">
+                    Aucun prix n'est défini pour ce mois. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a>
                 </div>
 
                 <div class="form-actions">
@@ -120,17 +116,66 @@
         }
     </style>
     
-    <script th:inline="javascript">
-        var prixUnitaire = /*[[${prixActuel}]]*/ null;
+    <script>
+        var prixUnitaire = null;
         
-        if (prixUnitaire !== null) {
-            document.getElementById('nbFois').addEventListener('input', function() {
-                var nbFois = parseInt(this.value) || 0;
-                var total = nbFois * prixUnitaire;
-                document.getElementById('estimationMontant').innerHTML = 
-                    total.toLocaleString('fr-FR') + ' Ar';
-            });
+        function formatNumber(num) {
+            return num.toLocaleString('fr-FR');
         }
+        
+        function updateEstimation() {
+            var nbFois = parseInt(document.getElementById('nbFois').value) || 0;
+            var estimationContainer = document.getElementById('estimationContainer');
+            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+            
+            if (prixUnitaire !== null && prixUnitaire > 0) {
+                var total = nbFois * prixUnitaire;
+                document.getElementById('prixUnitaireDisplay').textContent = formatNumber(prixUnitaire);
+                document.getElementById('estimationMontant').textContent = formatNumber(total) + ' Ar';
+                estimationContainer.style.display = 'block';
+                prixNonDefiniAlert.style.display = 'none';
+            } else {
+                estimationContainer.style.display = 'none';
+            }
+        }
+        
+        function fetchPrixPourMois() {
+            var dateDiffusion = document.getElementById('dateDiffusion').value;
+            var estimationContainer = document.getElementById('estimationContainer');
+            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+            
+            if (!dateDiffusion) {
+                prixUnitaire = null;
+                estimationContainer.style.display = 'none';
+                prixNonDefiniAlert.style.display = 'none';
+                return;
+            }
+            
+            var parts = dateDiffusion.split('-');
+            var annee = parseInt(parts[0]);
+            var mois = parseInt(parts[1]);
+            
+            fetch('/backoffice/prix-publicite/api/prix-pour-mois?annee=' + annee + '&mois=' + mois)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prixDefini && data.prix !== null) {
+                        prixUnitaire = data.prix;
+                        prixNonDefiniAlert.style.display = 'none';
+                    } else {
+                        prixUnitaire = null;
+                        prixNonDefiniAlert.style.display = 'block';
+                    }
+                    updateEstimation();
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération du prix:', error);
+                    prixUnitaire = null;
+                    estimationContainer.style.display = 'none';
+                });
+        }
+        
+        document.getElementById('dateDiffusion').addEventListener('change', fetchPrixPourMois);
+        document.getElementById('nbFois').addEventListener('input', updateEstimation);
     </script>
 </body>
 </html>

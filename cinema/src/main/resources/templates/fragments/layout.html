@@ -26,7 +26,7 @@
             <li><a th:href="@{/backoffice/seances}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/seances')} ? 'active' : ''">Séances</a></li>
             <li><a th:href="@{/backoffice/categories-personne}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/categories-personne')} ? 'active' : ''">Catégories</a></li>
             <li><a th:href="@{/backoffice/reservations}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/reservations')} ? 'active' : ''">Réservations</a></li>
-            <li><a th:href="@{/backoffice/publicites}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/publicites')} ? 'active' : ''" style="color: var(--gold);">📺 Publicités</a></li>
+            <li><a th:href="@{/backoffice/publicites}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/publicites')} ? 'active' : ''" style="color: var(--gold);"> Publicités</a></li>
         </ul>
         <div class="nav-actions">
             <a th:href="@{/}" class="btn btn-outline">Voir le site</a>

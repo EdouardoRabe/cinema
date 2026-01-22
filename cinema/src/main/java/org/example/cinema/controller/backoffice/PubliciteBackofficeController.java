@@ -75,7 +75,6 @@ public class PubliciteBackofficeController {
     public String createForm(Model model) {
         model.addAttribute("societes", societeService.findAll());
         model.addAttribute("moisDisponibles", publiciteService.getMoisDisponibles());
-        model.addAttribute("prixActuel", prixPubliciteService.getPrixActuel());
         return "backoffice/publicite-form";
     }
 
