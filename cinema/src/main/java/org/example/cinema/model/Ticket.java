@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ticket", uniqueConstraints = {
@@ -41,10 +41,10 @@ public class Ticket {
     private BigDecimal prix;
 
     @Column(name = "cree_le")
-    private OffsetDateTime creeLe;
+    private LocalDateTime creeLe;
 
     @PrePersist
     protected void onCreate() {
-        creeLe = OffsetDateTime.now();
+        creeLe = LocalDateTime.now();
     }
 }

@@ -4,7 +4,7 @@ import org.example.cinema.model.Client;
 import org.example.cinema.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -43,7 +43,7 @@ public class ClientService {
                 .email(email)
                 .telephone(telephone)
                 .motDePasse(motDePasse)
-                .creeLe(OffsetDateTime.now())
+                .creeLe(LocalDateTime.now())
                 .build();
         return repository.save(client);
     }

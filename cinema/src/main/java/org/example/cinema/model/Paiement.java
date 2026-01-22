@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "paiement")
@@ -23,12 +23,12 @@ public class Paiement {
     private BigDecimal montantPaye;
 
     @Column(name = "date_paiement")
-    private OffsetDateTime datePaiement;
+    private LocalDateTime datePaiement;
 
     @PrePersist
     protected void onCreate() {
         if (datePaiement == null) {
-            datePaiement = OffsetDateTime.now();
+            datePaiement = LocalDateTime.now();
         }
     }
 }

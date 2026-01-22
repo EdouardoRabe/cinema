@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class Reservation {
     private BigDecimal montantTotal;
 
     @Column(name = "cree_le")
-    private OffsetDateTime creeLe;
+    private LocalDateTime creeLe;
 
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -41,6 +41,6 @@ public class Reservation {
 
     @PrePersist
     protected void onCreate() {
-        creeLe = OffsetDateTime.now();
+        creeLe = LocalDateTime.now();
     }
 }

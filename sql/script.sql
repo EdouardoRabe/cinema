@@ -23,7 +23,7 @@ CREATE TABLE film (
     date_sortie DATE,
     age_min INT DEFAULT 0, 
     langue_originale TEXT, 
-    cree_le TIMESTAMPTZ DEFAULT now()
+    cree_le TIMESTAMP DEFAULT now()
 );
 
     CREATE TABLE genre (
@@ -42,7 +42,7 @@ CREATE TABLE film (
         id SERIAL PRIMARY KEY,
         nom TEXT NOT NULL,
         capacite INT NOT NULL CHECK (capacite > 0),
-        cree_le TIMESTAMPTZ DEFAULT now()
+        cree_le TIMESTAMP DEFAULT now()
     );
 
     CREATE TABLE place (
@@ -52,7 +52,7 @@ CREATE TABLE film (
         numero INT,
         code_place TEXT,
         id_type_place INT REFERENCES type_place(id),
-        cree_le TIMESTAMPTZ DEFAULT now(),
+        cree_le TIMESTAMP DEFAULT now(),
         UNIQUE (id_salle, rangee, numero)
     );
 
@@ -64,7 +64,7 @@ CREATE TABLE film (
         debut TIMESTAMP NOT NULL,
         fin TIMESTAMP,
         langue TEXT,
-        cree_le TIMESTAMPTZ DEFAULT now()
+        cree_le TIMESTAMP DEFAULT now()
     );
 
     CREATE INDEX idx_seance_salle_debut
@@ -77,7 +77,7 @@ CREATE TABLE film (
         email TEXT UNIQUE,
         telephone TEXT,
         mot_de_passe TEXT,
-        cree_le TIMESTAMPTZ DEFAULT now()
+        cree_le TIMESTAMP DEFAULT now()
     );
 
     CREATE TABLE statut_reservation (
@@ -92,7 +92,7 @@ CREATE TABLE film (
         id_personne INT REFERENCES personne(id) NULL, 
         id_statut INT REFERENCES statut_reservation(id),
         montant_total NUMERIC(6,2) DEFAULT 0,
-        cree_le TIMESTAMPTZ DEFAULT now()
+        cree_le TIMESTAMP DEFAULT now()
     );
 
 
@@ -100,7 +100,7 @@ CREATE TABLE film (
         id SERIAL PRIMARY KEY,
         id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
         id_statut INT REFERENCES statut_reservation(id),
-        date_changement TIMESTAMPTZ DEFAULT now(),
+        date_changement TIMESTAMP DEFAULT now(),
         change_par INT REFERENCES personne(id),
         commentaire TEXT
     );
@@ -121,7 +121,7 @@ CREATE TABLE film (
         id_statut INT REFERENCES statut_ticket(id),
         id_categorie_personne INT REFERENCES categorie_personne(id), -- adulte/enfant
         prix NUMERIC(10,2) NOT NULL,
-        cree_le TIMESTAMPTZ DEFAULT now(),
+        cree_le TIMESTAMP DEFAULT now(),
         UNIQUE (id_seance, id_place)
     );
 
@@ -132,7 +132,7 @@ CREATE TABLE film (
         id SERIAL PRIMARY KEY,
         id_ticket INT REFERENCES ticket(id) ON DELETE CASCADE,
         id_statut INT REFERENCES statut_ticket(id),
-        date_changement TIMESTAMPTZ DEFAULT now(),
+        date_changement TIMESTAMP DEFAULT now(),
         change_par INT REFERENCES personne(id),
         commentaire TEXT
     );
@@ -158,7 +158,7 @@ CREATE TABLE film (
         id_type_place INT REFERENCES type_place(id),
         id_categorie_personne INT REFERENCES categorie_personne(id),
         prix NUMERIC(10,2),
-        date_creation TIMESTAMPTZ DEFAULT now()
+        date_creation TIMESTAMP DEFAULT now()
     );
 
     CREATE INDEX idx_tarif_seance_lookup ON tarif_seance(id_seance, id_type_place, id_categorie_personne, date_creation DESC);
@@ -170,7 +170,7 @@ CREATE TABLE film (
         id SERIAL PRIMARY KEY,
         id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
         montant_paye NUMERIC(10,2) NOT NULL,
-        date_paiement TIMESTAMPTZ DEFAULT now()
+        date_paiement TIMESTAMP DEFAULT now()
     );
 
 
@@ -186,7 +186,7 @@ CREATE TABLE film (
         id_categorie_personne_cible INT REFERENCES categorie_personne(id),
         id_categorie_personne_repere INT REFERENCES categorie_personne(id),
         pourcentage NUMERIC(5,2) NOT NULL,
-        date_creation TIMESTAMPTZ DEFAULT now()
+        date_creation TIMESTAMP DEFAULT now()
     );
 
     CREATE INDEX idx_remise_lookup ON remise(id_seance, id_type_place, id_categorie_personne_cible, date_creation DESC);
