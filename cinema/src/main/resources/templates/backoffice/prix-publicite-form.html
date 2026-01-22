@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouveau Prix')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Définir un nouveau prix</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">📋 Diffusions</a>
+                <a th:href="@{/backoffice/societes}" class="btn btn-outline">🏢 Sociétés</a>
+                <a th:href="@{/backoffice/prix-publicite}" class="btn btn-primary">💰 Prix</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div th:if="${prixActuel != null}" class="info-card" style="margin-bottom: 2rem; padding: 1rem; background: var(--bg-card); border-radius: 8px;">
+            <p style="margin: 0; color: #aaa;">
+                Prix actuel: <strong style="color: var(--gold);" th:text="${#numbers.formatDecimal(prixActuel, 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</strong>
+            </p>
+        </div>
+        <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 2rem;">
+            <strong>⚠</strong> Aucun prix n'est défini. Veuillez en créer un.
+        </div>
+
+        <div class="form-card" style="background: var(--bg-card); padding: 2rem; border-radius: 12px;">
+            <form th:action="@{/backoffice/prix-publicite/save}" method="post">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="prix" class="form-label">Nouveau prix (en Ariary) *</label>
+                    <input type="number" id="prix" name="prix" required min="0" step="1000"
+                           class="form-input" placeholder="Ex: 250000">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="dateCreation" class="form-label">Date d'application *</label>
+                    <input type="datetime-local" id="dateCreation" name="dateCreation" required class="form-input">
+                    <small class="form-hint">Ce prix sera utilisé pour calculer le CA des publicités à partir de cette date.</small>
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">Enregistrer le nouveau prix</button>
+                    <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .pub-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .form-hint {
+            display: block;
+            margin-top: 0.5rem;
+            color: #888;
+            font-size: 0.875rem;
+        }
+        .alert-warning {
+            padding: 1rem;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            color: var(--gold);
+        }
+    </style>
+</body>
+</html>

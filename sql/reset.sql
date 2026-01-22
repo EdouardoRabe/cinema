@@ -9,6 +9,9 @@
 SET session_replication_role = 'replica';
 
 -- Truncate toutes les tables (ordre inverse des dépendances)
+TRUNCATE TABLE publicite RESTART IDENTITY CASCADE;
+TRUNCATE TABLE prix_publicite RESTART IDENTITY CASCADE;
+TRUNCATE TABLE societe RESTART IDENTITY CASCADE;
 TRUNCATE TABLE remise RESTART IDENTITY CASCADE;
 TRUNCATE TABLE paiement RESTART IDENTITY CASCADE;
 TRUNCATE TABLE tarif_seance RESTART IDENTITY CASCADE;
