@@ -72,5 +72,75 @@ CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS n(numer
 -- ------------------------------
 INSERT INTO tarif_defaut (id_type_place, id_categorie_personne, prix) VALUES
 (1, 1, 30000),  -- Standard - Adulte
-(1, 2, 20000),  -- Standard - Enfant
-(1, 3, 25000);  -- Standard - Senior
+(1, 2, 30000),  -- Standard - Enfant
+(1, 3, 30000);  -- Standard - Ado
+
+-- ------------------------------
+-- SEANCES TITANIC
+-- ------------------------------
+-- Titanic a une durée de 195 minutes = 3h15
+INSERT INTO seance (id_film, id_salle, debut, fin, langue) VALUES
+(1, 1, '2026-01-20 10:00:00', '2026-01-20 13:15:00', 'VF'),  -- Séance 1: 20 janvier 2026 à 10h
+(1, 1, '2026-01-21 10:00:00', '2026-01-21 13:15:00', 'VF'),  -- Séance 2: 21 janvier 2026 à 10h
+(1, 1, '2026-01-21 15:00:00', '2026-01-21 18:15:00', 'VF');  -- Séance 3: 21 janvier 2026 à 15h
+
+-- ------------------------------
+-- TARIFS PAR SEANCE (30000 Ar pour tous)
+-- ------------------------------
+INSERT INTO tarif_seance (id_seance, id_type_place, id_categorie_personne, prix) VALUES
+-- Séance 1 (20 janvier 10h)
+(1, 1, 1, 30000),  -- Standard - Adulte
+(1, 1, 2, 30000),  -- Standard - Enfant
+(1, 1, 3, 30000),  -- Standard - Ado
+-- Séance 2 (21 janvier 10h)
+(2, 1, 1, 30000),  -- Standard - Adulte
+(2, 1, 2, 30000),  -- Standard - Enfant
+(2, 1, 3, 30000),  -- Standard - Ado
+-- Séance 3 (21 janvier 15h)
+(3, 1, 1, 30000),  -- Standard - Adulte
+(3, 1, 2, 30000),  -- Standard - Enfant
+(3, 1, 3, 30000);  -- Standard - Ado
+
+-- ------------------------------
+-- SOCIETES PUBLICITAIRES
+-- ------------------------------
+INSERT INTO societe (libelle) VALUES
+('Vaniala'),
+('Lewis'),
+('Socobis');
+
+-- ------------------------------
+-- PRIX PUBLICITE (100 Ar par diffusion par exemple)
+-- ------------------------------
+INSERT INTO prix_publicite (prix, date_creation) VALUES
+(200000, '2026-01-01 00:00:00');
+
+-- ------------------------------
+-- PUBLICITES
+-- ------------------------------
+-- Publicité Vaniala (pour séance 1 et séance 2)
+INSERT INTO publicite (id_societe, cree_le) VALUES
+(1, '2026-01-15 10:00:00');  -- Publicité 1 - Vaniala
+
+-- Publicité Lewis (pour séance 1)
+INSERT INTO publicite (id_societe, cree_le) VALUES
+(2, '2026-01-15 11:00:00');  -- Publicité 2 - Lewis
+
+-- Publicité Socobis (pour séance 2)
+INSERT INTO publicite (id_societe, cree_le) VALUES
+(3, '2026-01-15 12:00:00');  -- Publicité 3 - Socobis
+
+-- ------------------------------
+-- DETAILS PUBLICITES (diffusions par séance)
+-- ------------------------------
+-- Séance 1 (20 janvier 10h): Pub Vaniala 1, Pub Lewis 1
+INSERT INTO publicite_detail (id_publicite, id_seance, nb_fois) VALUES
+(1, 1, 1),  -- Vaniala - Séance 1 - 1 diffusion
+(2, 1, 1);  -- Lewis - Séance 1 - 1 diffusion
+
+-- Séance 2 (21 janvier 10h): Pub Vaniala 2, Pub Socobis 1
+INSERT INTO publicite_detail (id_publicite, id_seance, nb_fois) VALUES
+(1, 2, 2),  -- Vaniala - Séance 2 - 2 diffusions
+(3, 2, 1);  -- Socobis - Séance 2 - 1 diffusion
+
+-- Séance 3 (21 janvier 15h): 0 pub (aucune insertion)
