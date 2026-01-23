@@ -115,14 +115,29 @@ public class SeanceBackofficeController {
         }
 
         // Montant généré par pub (montant payé au prorata par séance)
+        java.util.function.Function<Long, java.math.BigDecimal> totalPayeProvider = 
+                pubId -> paiementPubliciteService.getTotalPaye(pubId);
         java.util.Map<Long, java.math.BigDecimal> montantsPub = publiciteService.calculerMontantsPubPayesPourSeances(
                 seanceIds,
-                pubId -> paiementPubliciteService.getTotalPaye(pubId)
+                totalPayeProvider
+        );
+
+        // Montant total de pub (à payer) par séance
+        java.util.Map<Long, java.math.BigDecimal> montantsTotalPub = publiciteService.calculerMontantsTotauxPubPourSeances(
+                seanceIds
+        );
+
+        // Reste à payer de pub par séance
+        java.util.Map<Long, java.math.BigDecimal> restesPubAPayer = publiciteService.calculerRestesPubPourSeances(
+                seanceIds,
+                totalPayeProvider
         );
 
         model.addAttribute("seances", seances);
         model.addAttribute("chiffresAffaires", chiffresAffaires);
         model.addAttribute("montantsPub", montantsPub);
+        model.addAttribute("montantsTotalPub", montantsTotalPub);
+        model.addAttribute("restesPubAPayer", restesPubAPayer);
         model.addAttribute("capacitesMax", capacitesMax);
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());

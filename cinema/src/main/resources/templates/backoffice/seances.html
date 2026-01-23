@@ -62,13 +62,14 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Film</th>
                         <th>Salle</th>
                         <th>Date & Heure</th>
                         <th>Langue</th>
                         <th>Montant généré par ticket</th>
+                        <th>Total Publicite</th>
                         <th>Montant généré par pub</th>
+                        <th>Reste à payer</th>
                         <th>CA total</th>
                         <!-- <th>CA max théorique</th> -->
                         <th>Actions</th>
@@ -76,13 +77,14 @@
                 </thead>
                 <tbody>
                     <tr th:each="seance : ${seances}">
-                        <td th:text="${seance.id}">1</td>
                         <td th:text="${seance.film.titre}">Film</td>
                         <td th:text="${seance.salle.nom}">Salle</td>
                         <td th:text="${#temporals.format(seance.debut, 'dd/MM/yyyy HH:mm')}">01/01/2026 14:00</td>
                         <td th:text="${seance.langue}">VOST</td>
                         <td style="color: var(--gold); font-weight: 600;" th:text="${#numbers.formatDecimal(chiffresAffaires[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
+                        <td style="color: #9c27b0; font-weight: 600;" th:text="${#numbers.formatDecimal(montantsTotalPub[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <td style="color: #00bcd4; font-weight: 600;" th:text="${#numbers.formatDecimal(montantsPub[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
+                        <td style="font-weight: 600;" th:styleappend="${(restesPubAPayer[seance.id] ?: 0) > 0 ? 'color: #f44336;' : 'color: #4caf50;'}" th:text="${#numbers.formatDecimal(restesPubAPayer[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <td style="color: #4caf50; font-weight: 600;" th:text="${#numbers.formatDecimal((chiffresAffaires[seance.id] ?: 0) + (montantsPub[seance.id] ?: 0), 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td>
                         <!-- <td style="color: var(--primary); font-weight: 600;" th:text="${#numbers.formatDecimal(capacitesMax[seance.id] ?: 0, 1, 'WHITESPACE', 0, 'POINT')} + ' Ar'">0 Ar</td> -->
                         <td>

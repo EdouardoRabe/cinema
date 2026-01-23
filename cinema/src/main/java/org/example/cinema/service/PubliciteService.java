@@ -283,4 +283,43 @@ public class PubliciteService {
         }
         return result;
     }
+
+  
+    public BigDecimal calculerMontantTotalPubPourSeance(Long seanceId) {
+        List<PubliciteDetail> details = detailRepository.findBySeanceId(seanceId);
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (PubliciteDetail detail : details) {
+            BigDecimal montantDetail = calculerMontantDetail(detail);
+            total = total.add(montantDetail);
+        }
+        
+        return total.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public Map<Long, BigDecimal> calculerMontantsTotauxPubPourSeances(List<Long> seanceIds) {
+        Map<Long, BigDecimal> result = new LinkedHashMap<>();
+        for (Long seanceId : seanceIds) {
+            result.put(seanceId, calculerMontantTotalPubPourSeance(seanceId));
+        }
+        return result;
+    }
+
+  
+    public BigDecimal calculerRestePubPourSeance(Long seanceId, 
+            java.util.function.Function<Long, BigDecimal> totalPayeProvider) {
+        BigDecimal montantTotal = calculerMontantTotalPubPourSeance(seanceId);
+        BigDecimal montantPaye = calculerMontantPubPayePourSeance(seanceId, totalPayeProvider);
+        return montantTotal.subtract(montantPaye).setScale(2, RoundingMode.HALF_UP);
+    }
+
+   
+    public Map<Long, BigDecimal> calculerRestesPubPourSeances(List<Long> seanceIds,
+            java.util.function.Function<Long, BigDecimal> totalPayeProvider) {
+        Map<Long, BigDecimal> result = new LinkedHashMap<>();
+        for (Long seanceId : seanceIds) {
+            result.put(seanceId, calculerRestePubPourSeance(seanceId, totalPayeProvider));
+        }
+        return result;
+    }
 }
