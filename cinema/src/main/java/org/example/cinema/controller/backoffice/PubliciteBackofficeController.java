@@ -41,7 +41,9 @@ public class PubliciteBackofficeController {
     }
 
     @GetMapping
-    public String list(Model model) {
+    public String list(@RequestParam(value = "mois", required = false) Integer mois,
+                       @RequestParam(value = "annee", required = false) Integer annee,
+                       Model model) {
         List<Publicite> publicites = publiciteService.findAll();
         
         // Map des montants totaux pour chaque publicité
@@ -57,12 +59,21 @@ public class PubliciteBackofficeController {
             totalNbFoisMap.put(pub.getId(), publiciteService.getTotalNbFois(pub));
         }
         
+        // Calcul du CA pub pour le mois/année sélectionné
+        int selectedMois = (mois != null) ? mois : java.time.LocalDate.now().getMonthValue();
+        int selectedAnnee = (annee != null) ? annee : java.time.LocalDate.now().getYear();
+        BigDecimal caPubMois = paiementPubliciteService.getCAPubPourMois(selectedAnnee, selectedMois);
+        
         model.addAttribute("publicites", publicites);
         model.addAttribute("montantsTotaux", montantsTotaux);
         model.addAttribute("totalPayeMap", totalPayeMap);
         model.addAttribute("restesAPayerMap", restesAPayerMap);
         model.addAttribute("totalNbFoisMap", totalNbFoisMap);
         model.addAttribute("prixActuel", prixPubliciteService.getPrixActuel());
+        model.addAttribute("selectedMois", selectedMois);
+        model.addAttribute("selectedAnnee", selectedAnnee);
+        model.addAttribute("caPubMois", caPubMois);
+        model.addAttribute("nomMois", publiciteService.getNomMois(selectedMois));
         
         return "backoffice/publicites";
     }
