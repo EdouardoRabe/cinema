@@ -37,7 +37,7 @@ INSERT INTO personne (nom_complet, email, telephone, mot_de_passe) VALUES
 -- Catégories de personne
 INSERT INTO categorie_personne (libelle) VALUES ('ADULTE');
 INSERT INTO categorie_personne (libelle) VALUES ('ENFANT');
-INSERT INTO categorie_personne (libelle) VALUES ('SENIOR');
+INSERT INTO categorie_personne (libelle) VALUES ('ADO');
 
 -- Genres
 INSERT INTO genre (libelle) VALUES ('ACTION');
