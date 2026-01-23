@@ -192,6 +192,13 @@ public class SeanceService {
         }
     }
 
+    /**
+     * Retourne toutes les séances avec film et salle chargés
+     */
+    public List<Seance> findAllWithFilmAndSalle() {
+        return repository.findAllWithDetails();
+    }
+
     public Seance save(Seance seance) {
         return repository.save(seance);
     }

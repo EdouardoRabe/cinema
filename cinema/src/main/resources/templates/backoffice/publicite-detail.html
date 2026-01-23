@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Détails Publicité')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Détails de la Publicité #<span th:text="${publicite.id}">1</span></h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">← Retour à la liste</a>
+                <a th:href="@{/backoffice/paiements-publicite/{id}(id=${publicite.id})}" class="btn btn-success">Effectuer un paiement</a>
+            </div>
+        </div>
+
+        <!-- Informations générales -->
+        <div class="info-card" style="margin-bottom: 2rem;">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Société</label>
+                    <span th:text="${publicite.societe.libelle}">Coca-Cola</span>
+                </div>
+                <div class="info-item">
+                    <label>Créé le</label>
+                    <span th:text="${#temporals.format(publicite.creeLe, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                </div>
+                <div class="info-item">
+                    <label>Nombre de séances</label>
+                    <span th:text="${publicite.details.size()}">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé financier -->
+        <div class="financial-summary">
+            <div class="summary-item">
+                <label>Montant total</label>
+                <span class="amount gold" th:text="${#numbers.formatDecimal(montantTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
+            </div>
+            <div class="summary-item">
+                <label>Total payé</label>
+                <span class="amount green" th:text="${#numbers.formatDecimal(totalPaye, 0, 'COMMA', 0, 'POINT')} + ' Ar'">400,000 Ar</span>
+            </div>
+            <div class="summary-item">
+                <label>Reste à payer</label>
+                <span class="amount" th:classappend="${resteAPayer > 0 ? 'red' : 'green'}" 
+                      th:text="${resteAPayer > 0 ? #numbers.formatDecimal(resteAPayer, 0, 'COMMA', 0, 'POINT') + ' Ar' : 'Soldé'}">600,000 Ar</span>
+            </div>
+            <div class="summary-item">
+                <label>Pourcentage payé</label>
+                <span class="amount" th:text="${pourcentagePaye} + '%'">40%</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" th:style="'width: ' + ${pourcentagePaye} + '%'"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails par séance -->
+        <h3 style="margin: 2rem 0 1rem;">Détails par séance</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Séance</th>
+                        <th>Film</th>
+                        <th>Date/Heure</th>
+                        <th>Salle</th>
+                        <th>Nb diffusions</th>
+                        <th>Montant</th>
+                        <th>Payé (prorata)</th>
+                        <th>Reste</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail : ${publicite.details}">
+                        <td th:text="${detail.seance.id}">1</td>
+                        <td th:text="${detail.seance.film.titre}">Avatar 3</td>
+                        <td th:text="${#temporals.format(detail.seance.debut, 'dd/MM/yyyy HH:mm')}">15/01/2026 20:00</td>
+                        <td th:text="${detail.seance.salle.nom}">Salle 1</td>
+                        <td>
+                            <span class="badge badge-primary" th:text="${detail.nbFois}">5</span>
+                        </td>
+                        <td style="color: var(--gold); font-weight: 600;" 
+                            th:text="${#numbers.formatDecimal(montantsDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</td>
+                        <td style="color: #4caf50;" 
+                            th:text="${#numbers.formatDecimal(montantsPayesDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">80,000 Ar</td>
+                        <td>
+                            <span th:if="${restesPayerDetails[detail.id] > 0}" style="color: #f44336; font-weight: 600;"
+                                  th:text="${#numbers.formatDecimal(restesPayerDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">120,000 Ar</span>
+                            <span th:if="${restesPayerDetails[detail.id] <= 0}" style="color: #4caf50; font-weight: 600;">Soldé</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info-note" style="margin-top: 1.5rem;">
+            <strong>Note:</strong> Les montants payés et restants sont calculés au prorata du pourcentage total payé 
+            (<span th:text="${pourcentagePaye}">40</span>%) appliqué à chaque détail.
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <style>
+        .pub-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #43a047;
+        }
+        .info-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .info-item label {
+            display: block;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        .info-item span {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 193, 7, 0.1) 100%);
+            border-radius: 12px;
+            border: 1px solid var(--gold);
+        }
+        .summary-item label {
+            display: block;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        .summary-item .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .amount.gold { color: var(--gold); }
+        .amount.green { color: #4caf50; }
+        .amount.red { color: #f44336; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+        .info-note {
+            padding: 1rem;
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            color: #17a2b8;
+            font-size: 0.9rem;
+        }
+    </style>
+</body>
+</html>

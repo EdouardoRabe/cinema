@@ -6,9 +6,10 @@
 
     <section class="section">
         <div class="section-header">
-            <h2 class="section-title">Paiement - Publicité</h2>
+            <h2 class="section-title">Paiement - Publicité #<span th:text="${publicite.id}">1</span></h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Retour aux diffusions</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Retour aux publicités</a>
+                <a th:href="@{/backoffice/publicites/detail/{id}(id=${publicite.id})}" class="btn btn-outline">Voir détails</a>
             </div>
         </div>
 
@@ -22,26 +23,23 @@
 
         <!-- Détails de la publicité -->
         <div class="pub-details" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #444;">
-            <h3 style="margin: 0 0 1rem 0; color: var(--gold);">Détails de la diffusion</h3>
+            <h3 style="margin: 0 0 1rem 0; color: var(--gold);">Informations</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                 <div>
                     <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Société</p>
                     <p style="margin: 0; font-weight: 600;" th:text="${publicite.societe.libelle}">Coca-Cola</p>
                 </div>
                 <div>
-                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Mois de diffusion</p>
-                    <p style="margin: 0; font-weight: 600;" th:text="${publicite.moisAnneeFormate}">Janvier 2026</p>
+                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Créé le</p>
+                    <p style="margin: 0; font-weight: 600;" th:text="${#temporals.format(publicite.creeLe, 'dd/MM/yyyy HH:mm')}">01/01/2026</p>
                 </div>
                 <div>
-                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Nombre de diffusions</p>
-                    <p style="margin: 0; font-weight: 600;" th:text="${publicite.nbFois}">5</p>
+                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Nombre de séances</p>
+                    <p style="margin: 0; font-weight: 600;" th:text="${publicite.details.size()}">5</p>
                 </div>
                 <div>
-                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Prix unitaire</p>
-                    <p style="margin: 0; font-weight: 600;">
-                        <span th:if="${prixUnitaire != null}" th:text="${#numbers.formatDecimal(prixUnitaire, 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</span>
-                        <span th:if="${prixUnitaire == null}" style="color: #888;">Non défini</span>
-                    </p>
+                    <p style="margin: 0 0 0.25rem 0; color: #888; font-size: 0.9rem;">Pourcentage payé</p>
+                    <p style="margin: 0; font-weight: 600;" th:text="${pourcentagePaye} + '%'">40%</p>
                 </div>
             </div>
         </div>
@@ -52,8 +50,7 @@
                 <div>
                     <p style="margin: 0 0 0.5rem 0; color: #888; font-size: 0.9rem;">Montant total</p>
                     <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--gold);">
-                        <span th:if="${montantTotal != null}" th:text="${#numbers.formatDecimal(montantTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
-                        <span th:if="${montantTotal == null}" style="color: #888;">-</span>
+                        <span th:text="${#numbers.formatDecimal(montantTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
                     </p>
                 </div>
                 <div>
@@ -65,16 +62,18 @@
                 <div>
                     <p style="margin: 0 0 0.5rem 0; color: #888; font-size: 0.9rem;">Reste à payer</p>
                     <p style="margin: 0; font-size: 1.5rem; font-weight: 700;">
-                        <span th:if="${resteAPayer != null && resteAPayer > 0}" style="color: #f44336;" th:text="${#numbers.formatDecimal(resteAPayer, 0, 'COMMA', 0, 'POINT')} + ' Ar'">500,000 Ar</span>
-                        <span th:if="${resteAPayer != null && resteAPayer <= 0}" style="color: #4caf50;">Soldé</span>
-                        <span th:if="${resteAPayer == null}" style="color: #888;">-</span>
+                        <span th:if="${resteAPayer > 0}" style="color: #f44336;" th:text="${#numbers.formatDecimal(resteAPayer, 0, 'COMMA', 0, 'POINT')} + ' Ar'">500,000 Ar</span>
+                        <span th:if="${resteAPayer <= 0}" style="color: #4caf50;">Soldé</span>
                     </p>
                 </div>
+            </div>
+            <div class="progress-bar" style="margin-top: 1rem;">
+                <div class="progress-fill" th:style="'width: ' + ${pourcentagePaye} + '%'"></div>
             </div>
         </div>
 
         <!-- Formulaire de paiement -->
-        <div th:if="${resteAPayer != null && resteAPayer > 0}" class="payment-form" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #444;">
+        <div th:if="${resteAPayer > 0}" class="payment-form" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #444;">
             <h3 style="margin: 0 0 1rem 0;">Enregistrer un paiement</h3>
             <form th:action="@{/backoffice/paiements-publicite/{id}/payer(id=${publicite.id})}" method="post" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 200px;">
@@ -101,8 +100,43 @@
         </div>
 
         <!-- Message si soldé -->
-        <div th:if="${resteAPayer != null && resteAPayer <= 0}" class="alert alert-success" style="margin-bottom: 2rem;">
+        <div th:if="${resteAPayer <= 0}" class="alert alert-success" style="margin-bottom: 2rem;">
             Cette publicité est entièrement payée.
+        </div>
+
+        <!-- Détails par séance -->
+        <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Répartition par séance (prorata: <span th:text="${pourcentagePaye}">40</span>%)</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Film</th>
+                            <th>Date/Heure</th>
+                            <th>Salle</th>
+                            <th>Nb fois</th>
+                            <th>Montant</th>
+                            <th>Payé</th>
+                            <th>Reste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${publicite.details}">
+                            <td th:text="${detail.seance.film.titre}">Avatar 3</td>
+                            <td th:text="${#temporals.format(detail.seance.debut, 'dd/MM/yyyy HH:mm')}">15/01/2026 20:00</td>
+                            <td th:text="${detail.seance.salle.nom}">Salle 1</td>
+                            <td><span class="badge badge-primary" th:text="${detail.nbFois}">5</span></td>
+                            <td style="color: var(--gold);" th:text="${#numbers.formatDecimal(montantsDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">200,000 Ar</td>
+                            <td style="color: #4caf50;" th:text="${#numbers.formatDecimal(montantsPayesDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">80,000 Ar</td>
+                            <td>
+                                <span th:if="${restesPayerDetails[detail.id] > 0}" style="color: #f44336;"
+                                      th:text="${#numbers.formatDecimal(restesPayerDetails[detail.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">120,000 Ar</span>
+                                <span th:if="${restesPayerDetails[detail.id] <= 0}" style="color: #4caf50;">Soldé</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Historique des paiements -->
@@ -188,6 +222,25 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
         }
     </style>
 </body>

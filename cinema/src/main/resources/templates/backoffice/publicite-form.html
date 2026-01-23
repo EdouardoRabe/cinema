@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="fr">
-<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle Diffusion')}"></head>
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle Publicité')}"></head>
 <body>
     <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
 
     <section class="section">
         <div class="section-header">
-            <h2 class="section-title">Nouvelle Diffusion Publicitaire</h2>
+            <h2 class="section-title">Nouvelle Publicité</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Diffusions</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Publicités</a>
                 <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
                 <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
             </div>
@@ -23,7 +23,7 @@
         </div>
 
         <div class="form-card">
-            <form th:action="@{/backoffice/publicites/save}" method="post">
+            <form th:action="@{/backoffice/publicites/save}" method="post" id="publiciteForm">
                 <div class="form-group">
                     <label for="societeId" class="form-label">Société *</label>
                     <select id="societeId" name="societeId" required class="form-input">
@@ -36,32 +36,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="dateDiffusion" class="form-label">Mois de diffusion *</label>
-                    <input type="month" id="dateDiffusion" name="dateDiffusion" required class="form-input">
-                    <small class="form-hint">Si une diffusion existe déjà pour ce mois, le nombre de diffusions sera mis à jour.</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="nbFois" class="form-label">Nombre de diffusions *</label>
-                    <input type="number" id="nbFois" name="nbFois" required min="1" value="1" class="form-input">
-                </div>
-
-                <div id="estimationContainer" class="form-group" style="padding: 1rem; background: var(--bg-dark); border-radius: 8px; display: none;">
-                    <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Estimation du montant</label>
-                    <p style="margin: 0 0 0.5rem 0; color: #aaa; font-size: 0.9rem;">
-                        Prix unitaire: <span id="prixUnitaireDisplay">-</span> Ar
-                    </p>
-                    <p id="estimationMontant" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gold);">
-                        - Ar
-                    </p>
-                </div>
-                
-                <div id="prixNonDefiniAlert" class="alert alert-warning" style="display: none; margin-bottom: 1rem;">
-                    Aucun prix n'est défini pour ce mois. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a>
+                    <label class="form-label">Séances et diffusions *</label>
+                    <p class="form-hint" style="margin-bottom: 1rem;">Recherchez et ajoutez des séances avec le nombre de diffusions pour chacune.</p>
+                    
+                    <!-- Recherche de séance -->
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="text" id="seanceSearch" class="form-input" placeholder="Rechercher une séance (film, date...)..." list="seancesList" style="flex: 1;">
+                        <datalist id="seancesList">
+                            <option th:each="s : ${seances}" 
+                                    th:value="${s.film.titre + ' - ' + #temporals.format(s.debut, 'dd/MM/yyyy HH:mm') + ' (' + s.salle.nom + ')'}"
+                                    th:data-id="${s.id}"></option>
+                        </datalist>
+                        <button type="button" id="addSeanceBtn" class="btn btn-primary">Ajouter</button>
+                    </div>
+                    
+                    <!-- Liste des séances sélectionnées -->
+                    <div id="selectedSeances" class="selected-seances">
+                        <p id="noSeanceMsg" style="color: #888; text-align: center; padding: 1rem;">Aucune séance sélectionnée</p>
+                    </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Enregistrer la diffusion</button>
+                    <button type="submit" class="btn btn-primary">Créer la publicité</button>
                     <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Annuler</a>
                 </div>
             </form>
@@ -70,6 +66,26 @@
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
     <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    
+    <!-- Stocker les données des séances via éléments cachés -->
+    <div id="seancesDataContainer" style="display: none;">
+        <span th:each="s : ${seances}" 
+              th:data-id="${s.id}" 
+              th:data-label="${s.film.titre + ' - ' + #temporals.format(s.debut, 'dd/MM/yyyy HH:mm') + ' (' + s.salle.nom + ')'}">
+        </span>
+    </div>
+    
+    <script>
+        // Charger les données des séances depuis les éléments DOM
+        var seancesData = {};
+        document.querySelectorAll('#seancesDataContainer span').forEach(function(el) {
+            var id = el.dataset.id;
+            seancesData[id] = {
+                id: id,
+                label: el.dataset.label
+            };
+        });
+    </script>
     
     <style>
         .pub-nav-buttons {
@@ -103,79 +119,129 @@
             color: #888;
             font-size: 0.875rem;
         }
-        .alert-warning {
-            padding: 1rem;
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid var(--gold);
+        .selected-seances {
+            border: 1px solid #444;
             border-radius: 8px;
-            color: var(--gold);
+            background: var(--bg-dark);
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
         }
-        .alert-warning a {
-            color: var(--gold);
-            text-decoration: underline;
+        .seance-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #333;
+        }
+        .seance-item:last-child {
+            border-bottom: none;
+        }
+        .seance-item .seance-info {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .seance-item .nbfois-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-light);
+            text-align: center;
+        }
+        .seance-item .remove-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .seance-item .remove-btn:hover {
+            background: #d32f2f;
         }
     </style>
     
     <script>
-        var prixUnitaire = null;
+        var selectedSeances = new Set();
         
-        function formatNumber(num) {
-            return num.toLocaleString('fr-FR');
-        }
-        
-        function updateEstimation() {
-            var nbFois = parseInt(document.getElementById('nbFois').value) || 0;
-            var estimationContainer = document.getElementById('estimationContainer');
-            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+        function updateSeancesList() {
+            var container = document.getElementById('selectedSeances');
+            var noMsg = document.getElementById('noSeanceMsg');
             
-            if (prixUnitaire !== null && prixUnitaire > 0) {
-                var total = nbFois * prixUnitaire;
-                document.getElementById('prixUnitaireDisplay').textContent = formatNumber(prixUnitaire);
-                document.getElementById('estimationMontant').textContent = formatNumber(total) + ' Ar';
-                estimationContainer.style.display = 'block';
-                prixNonDefiniAlert.style.display = 'none';
+            if (selectedSeances.size === 0) {
+                noMsg.style.display = 'block';
             } else {
-                estimationContainer.style.display = 'none';
+                noMsg.style.display = 'none';
             }
         }
         
-        function fetchPrixPourMois() {
-            var dateDiffusion = document.getElementById('dateDiffusion').value;
-            var estimationContainer = document.getElementById('estimationContainer');
-            var prixNonDefiniAlert = document.getElementById('prixNonDefiniAlert');
+        function addSeance() {
+            var searchInput = document.getElementById('seanceSearch');
+            var searchValue = searchInput.value;
             
-            if (!dateDiffusion) {
-                prixUnitaire = null;
-                estimationContainer.style.display = 'none';
-                prixNonDefiniAlert.style.display = 'none';
+            // Trouver la séance correspondante
+            var foundId = null;
+            for (var id in seancesData) {
+                if (seancesData[id].label === searchValue) {
+                    foundId = id;
+                    break;
+                }
+            }
+            
+            if (!foundId) {
+                alert('Séance non trouvée. Veuillez sélectionner une séance dans la liste.');
                 return;
             }
             
-            var parts = dateDiffusion.split('-');
-            var annee = parseInt(parts[0]);
-            var mois = parseInt(parts[1]);
+            if (selectedSeances.has(foundId)) {
+                alert('Cette séance est déjà ajoutée.');
+                return;
+            }
             
-            fetch('/backoffice/prix-publicite/api/prix-pour-mois?annee=' + annee + '&mois=' + mois)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.prixDefini && data.prix !== null) {
-                        prixUnitaire = data.prix;
-                        prixNonDefiniAlert.style.display = 'none';
-                    } else {
-                        prixUnitaire = null;
-                        prixNonDefiniAlert.style.display = 'block';
-                    }
-                    updateEstimation();
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la récupération du prix:', error);
-                    prixUnitaire = null;
-                    estimationContainer.style.display = 'none';
-                });
+            selectedSeances.add(foundId);
+            
+            var container = document.getElementById('selectedSeances');
+            var noMsg = document.getElementById('noSeanceMsg');
+            noMsg.style.display = 'none';
+            
+            var item = document.createElement('div');
+            item.className = 'seance-item';
+            item.dataset.seanceId = foundId;
+            item.innerHTML = `
+                <div class="seance-info">${seancesData[foundId].label}</div>
+                <input type="hidden" name="seanceIds" value="${foundId}">
+                <label style="font-size: 0.85rem; color: #aaa;">Nb fois:</label>
+                <input type="number" name="nbFoisList" class="nbfois-input" value="1" min="1" required>
+                <button type="button" class="remove-btn" onclick="removeSeance(this, '${foundId}')">✕</button>
+            `;
+            container.appendChild(item);
+            
+            searchInput.value = '';
         }
         
-        document.getElementById('dateDiffusion').addEventListener('change', fetchPrixPourMois);
-        document.getElementById('nbFois').addEventListener('input', updateEstimation);
+        function removeSeance(btn, seanceId) {
+            selectedSeances.delete(seanceId);
+            btn.closest('.seance-item').remove();
+            updateSeancesList();
+        }
+        
+        document.getElementById('addSeanceBtn').addEventListener('click', addSeance);
+        
+        document.getElementById('seanceSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSeance();
+            }
+        });
+        
+        document.getElementById('publiciteForm').addEventListener('submit', function(e) {
+            if (selectedSeances.size === 0) {
+                e.preventDefault();
+                alert('Veuillez ajouter au moins une séance.');
+            }
+        });
     </script>
 </body>
 </html>

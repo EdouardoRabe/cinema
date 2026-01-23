@@ -206,13 +206,19 @@ CREATE TABLE film (
     CREATE TABLE publicite (
         id SERIAL PRIMARY KEY,
         id_societe INT REFERENCES societe(id) ON DELETE CASCADE,
-        nb_fois INT NOT NULL DEFAULT 1 CHECK (nb_fois > 0),
-        date_diffusion DATE NOT NULL,
-        cree_le TIMESTAMP DEFAULT now(),
-        UNIQUE (id_societe, date_diffusion)
+        cree_le TIMESTAMP DEFAULT now()
     );
 
-    CREATE INDEX idx_publicite_date ON publicite(date_diffusion);
+    CREATE TABLE publicite_detail (
+        id SERIAL PRIMARY KEY,
+        id_publicite INT REFERENCES publicite(id) ON DELETE CASCADE,
+        id_seance INT REFERENCES seance(id) ON DELETE CASCADE,
+        nb_fois INT NOT NULL DEFAULT 1 CHECK (nb_fois > 0),
+        UNIQUE (id_publicite, id_seance)
+    );
+
+    CREATE INDEX idx_publicite_detail_seance ON publicite_detail(id_seance);
+    CREATE INDEX idx_publicite_detail_pub ON publicite_detail(id_publicite);
 
     CREATE TABLE paiement_publicite (
         id SERIAL PRIMARY KEY,

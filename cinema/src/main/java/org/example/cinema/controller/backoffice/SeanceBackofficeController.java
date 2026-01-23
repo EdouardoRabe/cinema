@@ -16,7 +16,9 @@ import org.example.cinema.repository.RemiseRepository;
 import org.example.cinema.repository.TarifSeanceRepository;
 import org.example.cinema.repository.TypePlaceRepository;
 import org.example.cinema.service.CategoriePersonneService;
+import org.example.cinema.service.PaiementPubliciteService;
 import org.example.cinema.service.PlaceService;
+import org.example.cinema.service.PubliciteService;
 import org.example.cinema.service.RemiseService;
 import org.example.cinema.service.ReservationService;
 import org.example.cinema.service.SeanceService;
@@ -44,6 +46,8 @@ public class SeanceBackofficeController {
     private final CategoriePersonneService categoriePersonneService;
     private final RemiseRepository remiseRepository;
     private final RemiseService remiseService;
+    private final PubliciteService publiciteService;
+    private final PaiementPubliciteService paiementPubliciteService;
 
     private final org.example.cinema.service.FilmService filmService;
     private final org.example.cinema.service.SalleService salleService;
@@ -53,6 +57,7 @@ public class SeanceBackofficeController {
             TypePlaceRepository typePlaceRepository, TarifSeanceRepository tarifSeanceRepository,
             CategoriePersonneService categoriePersonneService,
             RemiseRepository remiseRepository, RemiseService remiseService,
+            PubliciteService publiciteService, PaiementPubliciteService paiementPubliciteService,
             org.example.cinema.service.FilmService filmService, org.example.cinema.service.SalleService salleService) {
         this.seanceService = seanceService;
         this.placeService = placeService;
@@ -63,6 +68,8 @@ public class SeanceBackofficeController {
         this.categoriePersonneService = categoriePersonneService;
         this.remiseRepository = remiseRepository;
         this.remiseService = remiseService;
+        this.publiciteService = publiciteService;
+        this.paiementPubliciteService = paiementPubliciteService;
         this.filmService = filmService;
         this.salleService = salleService;
     }
@@ -85,13 +92,9 @@ public class SeanceBackofficeController {
 
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
         
-        // CA réel (basé sur les réservations payées)
+        // CA réel (basé sur les réservations payées) = Montant généré par ticket
         java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService
                 .getChiffreAffairesBySeances(seanceIds);
-        
-        // CA fictif (basé sur les tickets avec les tarifs actuels)
-        java.util.Map<Long, java.math.BigDecimal> chiffresAffairesFictifs = tarifService
-                .calculerCAFictifsBySeances(seanceIds);
 
         // CA maximal théorique par séance (somme des places * tarif max par type de place)
         java.util.Map<Long, java.math.BigDecimal> capacitesMax = new java.util.HashMap<>();
@@ -111,9 +114,15 @@ public class SeanceBackofficeController {
             capacitesMax.put(seance.getId(), total);
         }
 
+        // Montant généré par pub (montant payé au prorata par séance)
+        java.util.Map<Long, java.math.BigDecimal> montantsPub = publiciteService.calculerMontantsPubPayesPourSeances(
+                seanceIds,
+                pubId -> paiementPubliciteService.getTotalPaye(pubId)
+        );
+
         model.addAttribute("seances", seances);
         model.addAttribute("chiffresAffaires", chiffresAffaires);
-        model.addAttribute("chiffresAffairesFictifs", chiffresAffairesFictifs);
+        model.addAttribute("montantsPub", montantsPub);
         model.addAttribute("capacitesMax", capacitesMax);
         model.addAttribute("films", filmService.findAll());
         model.addAttribute("salles", salleService.findAll());

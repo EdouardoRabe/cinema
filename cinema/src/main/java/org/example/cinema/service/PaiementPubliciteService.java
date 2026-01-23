@@ -2,14 +2,18 @@ package org.example.cinema.service;
 
 import org.example.cinema.model.PaiementPublicite;
 import org.example.cinema.model.Publicite;
+import org.example.cinema.model.PubliciteDetail;
 import org.example.cinema.repository.PaiementPubliciteRepository;
 import org.example.cinema.repository.PubliciteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -17,14 +21,14 @@ public class PaiementPubliciteService {
 
     private final PaiementPubliciteRepository repository;
     private final PubliciteRepository publiciteRepository;
-    private final PrixPubliciteService prixPubliciteService;
+    private final PubliciteService publiciteService;
 
     public PaiementPubliciteService(PaiementPubliciteRepository repository, 
                                    PubliciteRepository publiciteRepository,
-                                   PrixPubliciteService prixPubliciteService) {
+                                   PubliciteService publiciteService) {
         this.repository = repository;
         this.publiciteRepository = publiciteRepository;
-        this.prixPubliciteService = prixPubliciteService;
+        this.publiciteService = publiciteService;
     }
 
     public List<PaiementPublicite> findAll() {
@@ -48,27 +52,10 @@ public class PaiementPubliciteService {
     }
 
     /**
-     * Calcule le montant total pour une publicité
-     */
-    private BigDecimal calculerMontant(Publicite pub) {
-        if (pub == null || pub.getDateDiffusion() == null) {
-            return null;
-        }
-        BigDecimal prixUnitaire = prixPubliciteService.getPrixPourMois(pub.getAnnee(), pub.getMois());
-        if (prixUnitaire == null) {
-            return null;
-        }
-        return prixUnitaire.multiply(new BigDecimal(pub.getNbFois()));
-    }
-
-    /**
      * Retourne le reste à payer pour une publicité
      */
     public BigDecimal getResteAPayer(Publicite pub) {
-        BigDecimal montantTotal = calculerMontant(pub);
-        if (montantTotal == null) {
-            return null;
-        }
+        BigDecimal montantTotal = publiciteService.calculerMontantTotal(pub);
         BigDecimal totalPaye = getTotalPaye(pub.getId());
         return montantTotal.subtract(totalPaye);
     }
@@ -77,11 +64,28 @@ public class PaiementPubliciteService {
      * Retourne le reste à payer pour une publicité (par ID)
      */
     public BigDecimal getResteAPayer(Long publiciteId) {
-        Optional<Publicite> pubOpt = publiciteRepository.findById(publiciteId);
-        if (pubOpt.isEmpty()) {
-            return null;
+        Publicite pub = publiciteRepository.findByIdWithDetails(publiciteId);
+        if (pub == null) {
+            return BigDecimal.ZERO;
         }
-        return getResteAPayer(pubOpt.get());
+        return getResteAPayer(pub);
+    }
+
+    /**
+     * Retourne le pourcentage payé pour une publicité
+     */
+    public BigDecimal getPourcentagePaye(Long publiciteId) {
+        Publicite pub = publiciteRepository.findByIdWithDetails(publiciteId);
+        if (pub == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal montantTotal = publiciteService.calculerMontantTotal(pub);
+        if (montantTotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal totalPaye = getTotalPaye(publiciteId);
+        return totalPaye.divide(montantTotal, 4, RoundingMode.HALF_UP)
+                       .multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -89,12 +93,14 @@ public class PaiementPubliciteService {
      */
     @Transactional
     public PaiementPublicite enregistrerPaiement(Long publiciteId, BigDecimal montant) {
-        Publicite pub = publiciteRepository.findById(publiciteId)
-                .orElseThrow(() -> new IllegalArgumentException("Publicité introuvable: " + publiciteId));
+        Publicite pub = publiciteRepository.findByIdWithDetails(publiciteId);
+        if (pub == null) {
+            throw new IllegalArgumentException("Publicité introuvable: " + publiciteId);
+        }
 
         // Vérifier que le montant ne dépasse pas le reste à payer
         BigDecimal resteAPayer = getResteAPayer(pub);
-        if (resteAPayer != null && montant.compareTo(resteAPayer) > 0) {
+        if (montant.compareTo(resteAPayer) > 0) {
             throw new IllegalArgumentException("Le montant dépasse le reste à payer (" + resteAPayer + " Ar)");
         }
 
@@ -111,8 +117,10 @@ public class PaiementPubliciteService {
      */
     @Transactional
     public PaiementPublicite enregistrerPaiement(Long publiciteId, BigDecimal montant, LocalDateTime datePaiement) {
-        Publicite pub = publiciteRepository.findById(publiciteId)
-                .orElseThrow(() -> new IllegalArgumentException("Publicité introuvable: " + publiciteId));
+        Publicite pub = publiciteRepository.findByIdWithDetails(publiciteId);
+        if (pub == null) {
+            throw new IllegalArgumentException("Publicité introuvable: " + publiciteId);
+        }
 
         PaiementPublicite paiement = new PaiementPublicite();
         paiement.setPublicite(pub);
@@ -128,12 +136,11 @@ public class PaiementPubliciteService {
     }
 
     /**
-     * Retourne le total des paiements pour un mois/année donné
-     * C'est le vrai CA (seuls les montants payés comptent)
+     * Calcule le CA publicitaire pour un mois/année donné
+     * Basé sur les montants payés au prorata des détails dont la séance est dans ce mois
      */
-    public BigDecimal getCAPourMois(int annee, int mois) {
-        BigDecimal total = repository.getTotalPayePourMois(annee, mois);
-        return total != null ? total : BigDecimal.ZERO;
+    public BigDecimal getCAPubPourMois(int annee, int mois) {
+        return publiciteService.calculerCAPubPourMois(annee, mois, this::getTotalPaye);
     }
 
     /**
@@ -141,14 +148,56 @@ public class PaiementPubliciteService {
      */
     public boolean estEntierementPayee(Publicite pub) {
         BigDecimal reste = getResteAPayer(pub);
-        return reste != null && reste.compareTo(BigDecimal.ZERO) <= 0;
+        return reste.compareTo(BigDecimal.ZERO) <= 0;
     }
 
     /**
      * Vérifie si une publicité est entièrement payée (par ID)
      */
     public boolean estEntierementPayee(Long publiciteId) {
-        Optional<Publicite> pubOpt = publiciteRepository.findById(publiciteId);
-        return pubOpt.map(this::estEntierementPayee).orElse(false);
+        BigDecimal reste = getResteAPayer(publiciteId);
+        return reste.compareTo(BigDecimal.ZERO) <= 0;
+    }
+
+    /**
+     * Crée une map des montants totaux payés pour une liste de publicités
+     */
+    public Map<Long, BigDecimal> getTotauxPayes(List<Publicite> publicites) {
+        Map<Long, BigDecimal> totaux = new LinkedHashMap<>();
+        for (Publicite pub : publicites) {
+            totaux.put(pub.getId(), getTotalPaye(pub.getId()));
+        }
+        return totaux;
+    }
+
+    /**
+     * Crée une map des restes à payer pour une liste de publicités
+     */
+    public Map<Long, BigDecimal> getRestesAPayer(List<Publicite> publicites) {
+        Map<Long, BigDecimal> restes = new LinkedHashMap<>();
+        for (Publicite pub : publicites) {
+            restes.put(pub.getId(), getResteAPayer(pub));
+        }
+        return restes;
+    }
+
+    /**
+     * Calcule le montant payé au prorata pour un détail donné
+     */
+    public BigDecimal getMontantPayeDetail(PubliciteDetail detail) {
+        Publicite pub = detail.getPublicite();
+        BigDecimal totalPaye = getTotalPaye(pub.getId());
+        BigDecimal montantTotal = publiciteService.calculerMontantTotal(pub);
+        return publiciteService.calculerMontantPayeDetail(detail, totalPaye, montantTotal);
+    }
+
+    /**
+     * Calcule le montant restant au prorata pour un détail donné
+     */
+    public BigDecimal getMontantRestantDetail(PubliciteDetail detail) {
+        Publicite pub = detail.getPublicite();
+        BigDecimal totalPaye = getTotalPaye(pub.getId());
+        BigDecimal montantTotal = publiciteService.calculerMontantTotal(pub);
+        return publiciteService.calculerMontantRestantDetail(detail, totalPaye, montantTotal);
     }
 }

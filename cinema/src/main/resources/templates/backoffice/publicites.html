@@ -6,9 +6,9 @@
 
     <section class="section">
         <div class="section-header">
-            <h2 class="section-title">Diffusions Publicitaires</h2>
+            <h2 class="section-title">Publicités</h2>
             <div class="pub-nav-buttons">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-primary">Diffusions</a>
+                <a th:href="@{/backoffice/publicites}" class="btn btn-primary">Publicités</a>
                 <a th:href="@{/backoffice/societes}" class="btn btn-outline">Sociétés</a>
                 <a th:href="@{/backoffice/prix-publicite}" class="btn btn-outline">Prix</a>
                 <a th:href="@{/backoffice/publicites/create}" class="btn btn-gold">+ Nouvelle</a>
@@ -25,112 +25,21 @@
 
         <!-- Alerte si pas de prix défini -->
         <div th:if="${prixActuel == null}" class="alert alert-warning" style="margin-bottom: 1rem;">
-            Aucun prix n'est défini. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a> pour pouvoir calculer le CA.
-        </div>
-
-        <!-- Filtres -->
-        <form method="get" th:action="@{/backoffice/publicites}" class="filters" style="margin-bottom: 1.5rem;">
-            <div class="filter-group">
-                <label class="filter-label">Année</label>
-                <input type="number" name="annee" class="filter-input" th:value="${selectedAnnee}" 
-                       placeholder="Ex: 2026" min="2000" max="2100" style="width: 120px;">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">Mois</label>
-                <select name="mois" class="filter-select">
-                    <option value="">Tous les mois</option>
-                    <option value="1" th:selected="${selectedMois == 1}">Janvier</option>
-                    <option value="2" th:selected="${selectedMois == 2}">Février</option>
-                    <option value="3" th:selected="${selectedMois == 3}">Mars</option>
-                    <option value="4" th:selected="${selectedMois == 4}">Avril</option>
-                    <option value="5" th:selected="${selectedMois == 5}">Mai</option>
-                    <option value="6" th:selected="${selectedMois == 6}">Juin</option>
-                    <option value="7" th:selected="${selectedMois == 7}">Juillet</option>
-                    <option value="8" th:selected="${selectedMois == 8}">Août</option>
-                    <option value="9" th:selected="${selectedMois == 9}">Septembre</option>
-                    <option value="10" th:selected="${selectedMois == 10}">Octobre</option>
-                    <option value="11" th:selected="${selectedMois == 11}">Novembre</option>
-                    <option value="12" th:selected="${selectedMois == 12}">Décembre</option>
-                </select>
-            </div>
-            <div class="filter-group" style="align-self: end;">
-                <button type="submit" class="btn btn-primary">Filtrer</button>
-            </div>
-            <div class="filter-group" style="align-self: end;">
-                <a th:href="@{/backoffice/publicites}" class="btn btn-outline">Réinitialiser</a>
-            </div>
-        </form>
-
-        <!-- Résumé CA si filtre mois/année actif -->
-        <div th:if="${caDetail != null}" class="ca-summary" style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 193, 7, 0.1) 100%); border-radius: 12px; border: 1px solid var(--gold);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h3 style="margin: 0 0 0.5rem 0; color: var(--gold);">
-                        Chiffre d'Affaires - <span th:text="${caDetail.moisLibelle} + ' ' + ${caDetail.annee}">Janvier 2026</span>
-                    </h3>
-                    <p style="margin: 0; color: #aaa;">
-                        <span th:text="${caDetail.nbSocietes}">3</span> société(s) - 
-                        <span th:text="${caDetail.totalDiffusions}">15</span> diffusion(s) -
-                        <span th:if="${caDetail.prixUnitaire != null}">
-                            Prix unitaire: <span th:text="${#numbers.formatDecimal(caDetail.prixUnitaire, 0, 'COMMA', 0, 'POINT')}">200,000</span> Ar
-                        </span>
-                        <span th:if="${caDetail.prixUnitaire == null}" style="color: var(--primary);">
-                            Prix non défini
-                        </span>
-                    </p>
-                </div>
-                <div style="text-align: right;">
-                    <div th:if="${caDetail.caReel != null}">
-                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--gold);">
-                            <span th:text="${#numbers.formatDecimal(caDetail.caReel, 0, 'COMMA', 0, 'POINT')}">0</span> Ar
-                        </p>
-                        <p style="margin: 0; font-size: 0.85rem; color: #888;">CA Reel (paiements)</p>
-                    </div>
-                    <div th:if="${caDetail.ca != null}" style="margin-top: 0.5rem;">
-                        <p style="margin: 0; font-size: 1rem; color: #aaa;">
-                            Montant attendu: <span th:text="${#numbers.formatDecimal(caDetail.ca, 0, 'COMMA', 0, 'POINT')}">3,000,000</span> Ar
-                        </p>
-                    </div>
-                    <p th:if="${caDetail.ca == null}" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #888;">
-                        CA non calculable
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats par mois si année sélectionnée -->
-        <div th:if="${statsParMois != null && !statsParMois.isEmpty() && selectedMois == null}" style="margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Récapitulatif par mois - <span th:text="${selectedAnnee}">2026</span></h3>
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
-                <div th:each="stat : ${statsParMois}" class="stat-card" style="padding: 1rem; background: var(--bg-card); border-radius: 8px; border-left: 4px solid var(--primary);">
-                    <h4 style="margin: 0 0 0.5rem 0;" th:text="${stat.moisLibelle}">Janvier</h4>
-                    <p style="margin: 0 0 0.25rem 0; color: #aaa; font-size: 0.9rem;">
-                        <span th:text="${stat.totalDiffusions}">10</span> diffusions
-                    </p>
-                    <p th:if="${stat.caReel != null}" style="margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--gold);">
-                        <span th:text="${#numbers.formatDecimal(stat.caReel, 0, 'COMMA', 0, 'POINT')}">0</span> Ar
-                    </p>
-                    <p th:if="${stat.ca != null}" style="margin: 0 0 0 0; font-size: 0.85rem; color: #888;">
-                        Attendu: <span th:text="${#numbers.formatDecimal(stat.ca, 0, 'COMMA', 0, 'POINT')}">2,000,000</span> Ar
-                    </p>
-                    <p th:if="${stat.ca == null}" style="margin: 0; font-size: 1rem; color: #888;">
-                        Prix non défini
-                    </p>
-                </div>
-            </div>
+            Aucun prix n'est défini. <a th:href="@{/backoffice/prix-publicite/create}" style="color: var(--gold);">Créer un prix</a> pour pouvoir calculer les montants.
         </div>
 
         <!-- Tableau des publicités -->
-        <h3 style="margin-bottom: 1rem;">Liste des diffusions</h3>
+        <h3 style="margin-bottom: 1rem;">Liste des publicités</h3>
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Société</th>
-                        <th>Mois</th>
-                        <th>Nb diffusions</th>
-                        <th>Montant</th>
+                        <th>Créé le</th>
+                        <th>Nb séances</th>
+                        <th>Total diffusions</th>
+                        <th>Montant total</th>
                         <th>Payé</th>
                         <th>Reste à payer</th>
                         <th>Actions</th>
@@ -140,36 +49,36 @@
                     <tr th:each="pub : ${publicites}">
                         <td th:text="${pub.id}">1</td>
                         <td th:text="${pub.societe.libelle}">Coca-Cola</td>
-                        <td th:text="${pub.moisAnneeFormate}">Janvier 2026</td>
+                        <td th:text="${#temporals.format(pub.creeLe, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
                         <td>
-                            <span class="badge" style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 20px;" th:text="${pub.nbFois}">5</span>
+                            <span class="badge badge-info" th:text="${pub.details.size()}">3</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary" th:text="${totalNbFoisMap[pub.id]}">15</span>
                         </td>
                         <td style="font-weight: 600; color: var(--gold);">
-                            <span th:if="${montantsMap[pub.id] != null}" th:text="${#numbers.formatDecimal(montantsMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
-                            <span th:if="${montantsMap[pub.id] == null}" style="color: #888;">-</span>
+                            <span th:text="${#numbers.formatDecimal(montantsTotaux[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">1,000,000 Ar</span>
                         </td>
                         <td style="color: #4caf50;">
-                            <span th:if="${totalPayeMap[pub.id] != null}" th:text="${#numbers.formatDecimal(totalPayeMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</span>
-                            <span th:if="${totalPayeMap[pub.id] == null}" style="color: #888;">-</span>
+                            <span th:text="${#numbers.formatDecimal(totalPayeMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</span>
                         </td>
                         <td>
-                            <span th:if="${restesAPayerMap[pub.id] != null && restesAPayerMap[pub.id] > 0}" 
+                            <span th:if="${restesAPayerMap[pub.id] > 0}" 
                                   style="color: #f44336; font-weight: 600;"
                                   th:text="${#numbers.formatDecimal(restesAPayerMap[pub.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">500,000 Ar</span>
-                            <span th:if="${restesAPayerMap[pub.id] != null && restesAPayerMap[pub.id] <= 0}" 
+                            <span th:if="${restesAPayerMap[pub.id] <= 0}" 
                                   style="color: #4caf50; font-weight: 600;">Soldé</span>
-                            <span th:if="${restesAPayerMap[pub.id] == null}" style="color: #888;">-</span>
                         </td>
                         <td>
+                            <a th:href="@{/backoffice/publicites/detail/{id}(id=${pub.id})}" class="btn btn-outline btn-sm">Détails</a>
                             <a th:href="@{/backoffice/paiements-publicite/{id}(id=${pub.id})}" class="btn btn-success btn-sm">Payer</a>
-                            <a th:href="@{/backoffice/publicites/edit/{id}(id=${pub.id})}" class="btn btn-primary btn-sm">Éditer</a>
-                            <form th:action="@{/backoffice/publicites/delete/{id}(id=${pub.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette diffusion ?');">
+                            <form th:action="@{/backoffice/publicites/delete/{id}(id=${pub.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette publicité et tous ses détails ?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                             </form>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(publicites)}">
-                        <td colspan="8" style="text-align: center; color: #aaa;">Aucune diffusion publicitaire enregistrée</td>
+                        <td colspan="9" style="text-align: center; color: #aaa;">Aucune publicité enregistrée</td>
                     </tr>
                 </tbody>
             </table>
@@ -192,18 +101,6 @@
         .btn-gold:hover {
             background: var(--gold-light);
         }
-        .filter-input {
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-card);
-            border: 1px solid #444;
-            border-radius: 6px;
-            color: var(--text-light);
-            font-size: 1rem;
-        }
-        .filter-input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
         .alert-warning {
             padding: 1rem;
             background: rgba(255, 193, 7, 0.1);
@@ -221,6 +118,18 @@
         }
         .btn-success:hover {
             background: #43a047;
+        }
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
         }
     </style>
 </body>

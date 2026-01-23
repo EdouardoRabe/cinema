@@ -1,7 +1,10 @@
 package org.example.cinema.controller.backoffice;
 
 import org.example.cinema.model.Publicite;
+import org.example.cinema.model.PubliciteDetail;
+import org.example.cinema.model.Seance;
 import org.example.cinema.service.PubliciteService;
+import org.example.cinema.service.SeanceService;
 import org.example.cinema.service.SocieteService;
 import org.example.cinema.service.PrixPubliciteService;
 import org.example.cinema.service.PaiementPubliciteService;
@@ -11,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,75 +24,44 @@ public class PubliciteBackofficeController {
 
     private final PubliciteService publiciteService;
     private final SocieteService societeService;
+    private final SeanceService seanceService;
     private final PrixPubliciteService prixPubliciteService;
     private final PaiementPubliciteService paiementPubliciteService;
 
     public PubliciteBackofficeController(PubliciteService publiciteService, 
                                          SocieteService societeService,
+                                         SeanceService seanceService,
                                          PrixPubliciteService prixPubliciteService,
                                          PaiementPubliciteService paiementPubliciteService) {
         this.publiciteService = publiciteService;
         this.societeService = societeService;
+        this.seanceService = seanceService;
         this.prixPubliciteService = prixPubliciteService;
         this.paiementPubliciteService = paiementPubliciteService;
     }
 
     @GetMapping
-    public String list(@RequestParam(name = "annee", required = false) Integer annee,
-                       @RequestParam(name = "mois", required = false) Integer mois,
-                       Model model) {
+    public String list(Model model) {
+        List<Publicite> publicites = publiciteService.findAll();
         
-        List<Publicite> publicites;
+        // Map des montants totaux pour chaque publicité
+        Map<Long, BigDecimal> montantsTotaux = publiciteService.getMontantsTotaux(publicites);
         
-        // Filtrage
-        if (annee != null && mois != null) {
-            publicites = publiciteService.findByYearMonth(annee, mois);
-        } else if (annee != null) {
-            publicites = publiciteService.findByYear(annee);
-        } else {
-            publicites = publiciteService.findAll();
-        }
+        // Map des totaux payés et restes à payer
+        Map<Long, BigDecimal> totalPayeMap = paiementPubliciteService.getTotauxPayes(publicites);
+        Map<Long, BigDecimal> restesAPayerMap = paiementPubliciteService.getRestesAPayer(publicites);
         
-        // Calcul du CA pour le filtre actuel (basé sur les paiements)
-        Map<String, Object> caDetail = null;
-        if (annee != null && mois != null) {
-            caDetail = publiciteService.getDetailCAPourMois(annee, mois);
-            // Ajouter le CA réel (paiements effectués)
-            BigDecimal caReel = paiementPubliciteService.getCAPourMois(annee, mois);
-            caDetail.put("caReel", caReel);
-        }
-        
-        // Statistiques par mois si une année est sélectionnée
-        List<Map<String, Object>> statsParMois = null;
-        if (annee != null) {
-            statsParMois = publiciteService.getStatistiquesParMois(annee);
-            // Ajouter le CA réel à chaque mois
-            for (Map<String, Object> stat : statsParMois) {
-                Integer m = (Integer) stat.get("mois");
-                BigDecimal caReel = paiementPubliciteService.getCAPourMois(annee, m);
-                stat.put("caReel", caReel);
-            }
-        }
-        
-        // Map des montants pour chaque publicité (calculés avec le prix du mois correspondant)
-        Map<Long, java.math.BigDecimal> montantsMap = publiciteService.getMontantsMap(publicites);
-        
-        // Map des restes à payer pour chaque publicité
-        Map<Long, BigDecimal> restesAPayerMap = new LinkedHashMap<>();
-        Map<Long, BigDecimal> totalPayeMap = new LinkedHashMap<>();
+        // Map du nombre total de diffusions
+        Map<Long, Integer> totalNbFoisMap = new LinkedHashMap<>();
         for (Publicite pub : publicites) {
-            restesAPayerMap.put(pub.getId(), paiementPubliciteService.getResteAPayer(pub));
-            totalPayeMap.put(pub.getId(), paiementPubliciteService.getTotalPaye(pub.getId()));
+            totalNbFoisMap.put(pub.getId(), publiciteService.getTotalNbFois(pub));
         }
         
         model.addAttribute("publicites", publicites);
-        model.addAttribute("montantsMap", montantsMap);
-        model.addAttribute("restesAPayerMap", restesAPayerMap);
+        model.addAttribute("montantsTotaux", montantsTotaux);
         model.addAttribute("totalPayeMap", totalPayeMap);
-        model.addAttribute("selectedAnnee", annee);
-        model.addAttribute("selectedMois", mois);
-        model.addAttribute("caDetail", caDetail);
-        model.addAttribute("statsParMois", statsParMois);
+        model.addAttribute("restesAPayerMap", restesAPayerMap);
+        model.addAttribute("totalNbFoisMap", totalNbFoisMap);
         model.addAttribute("prixActuel", prixPubliciteService.getPrixActuel());
         
         return "backoffice/publicites";
@@ -99,63 +70,80 @@ public class PubliciteBackofficeController {
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("societes", societeService.findAll());
-        model.addAttribute("moisDisponibles", publiciteService.getMoisDisponibles());
+        model.addAttribute("seances", seanceService.findAllWithFilmAndSalle());
         return "backoffice/publicite-form";
     }
 
     @PostMapping("/save")
     public String save(@RequestParam("societeId") Long societeId,
-                       @RequestParam("dateDiffusion") String dateDiffusionStr,
-                       @RequestParam("nbFois") Integer nbFois,
+                       @RequestParam(value = "seanceIds", required = false) List<Long> seanceIds,
+                       @RequestParam(value = "nbFoisList", required = false) List<Integer> nbFoisList,
                        RedirectAttributes ra) {
         try {
-            LocalDate dateDiffusion = LocalDate.parse(dateDiffusionStr + "-01");
-            publiciteService.addOrUpdateDiffusion(societeId, dateDiffusion, nbFois);
-            ra.addFlashAttribute("successMessage", "Diffusion publicitaire enregistrée avec succès");
+            if (seanceIds == null || seanceIds.isEmpty()) {
+                ra.addFlashAttribute("errorMessage", "Veuillez ajouter au moins une séance");
+                return "redirect:/backoffice/publicites/create";
+            }
+            if (nbFoisList == null || nbFoisList.size() != seanceIds.size()) {
+                ra.addFlashAttribute("errorMessage", "Erreur: nombre de diffusions manquant pour certaines séances");
+                return "redirect:/backoffice/publicites/create";
+            }
+            publiciteService.creerPublicite(societeId, seanceIds, nbFoisList);
+            ra.addFlashAttribute("successMessage", "Publicité créée avec succès");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Erreur: " + e.getMessage());
         }
         return "redirect:/backoffice/publicites";
     }
 
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
-        var pubOpt = publiciteService.findById(id);
-        if (pubOpt.isEmpty()) {
+    @GetMapping("/detail/{id}")
+    public String detail(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
+        Publicite pub = publiciteService.findByIdWithDetails(id);
+        if (pub == null) {
             ra.addFlashAttribute("errorMessage", "Publicité introuvable");
             return "redirect:/backoffice/publicites";
         }
         
-        Publicite pub = pubOpt.get();
+        BigDecimal montantTotal = publiciteService.calculerMontantTotal(pub);
+        BigDecimal totalPaye = paiementPubliciteService.getTotalPaye(id);
+        BigDecimal resteAPayer = paiementPubliciteService.getResteAPayer(pub);
+        BigDecimal pourcentagePaye = paiementPubliciteService.getPourcentagePaye(id);
+        
+        // Calcul des montants par détail
+        Map<Long, BigDecimal> montantsDetails = new LinkedHashMap<>();
+        Map<Long, BigDecimal> montantsPayesDetails = new LinkedHashMap<>();
+        Map<Long, BigDecimal> restesPayerDetails = new LinkedHashMap<>();
+        
+        for (PubliciteDetail detail : pub.getDetails()) {
+            BigDecimal montantDetail = publiciteService.calculerMontantDetail(detail);
+            BigDecimal montantPayeDetail = publiciteService.calculerMontantPayeDetail(detail, totalPaye, montantTotal);
+            BigDecimal resteDetail = publiciteService.calculerMontantRestantDetail(detail, totalPaye, montantTotal);
+            
+            montantsDetails.put(detail.getId(), montantDetail);
+            montantsPayesDetails.put(detail.getId(), montantPayeDetail);
+            restesPayerDetails.put(detail.getId(), resteDetail);
+        }
+        
         model.addAttribute("publicite", pub);
-        model.addAttribute("societes", societeService.findAll());
-        model.addAttribute("prixActuel", prixPubliciteService.getPrixActuel());
+        model.addAttribute("montantTotal", montantTotal);
+        model.addAttribute("totalPaye", totalPaye);
+        model.addAttribute("resteAPayer", resteAPayer);
+        model.addAttribute("pourcentagePaye", pourcentagePaye);
+        model.addAttribute("montantsDetails", montantsDetails);
+        model.addAttribute("montantsPayesDetails", montantsPayesDetails);
+        model.addAttribute("restesPayerDetails", restesPayerDetails);
         
-        return "backoffice/publicite-edit";
-    }
-
-    @PostMapping("/update/{id}")
-    public String update(@PathVariable("id") Long id,
-                         @RequestParam("nbFois") Integer nbFois,
-                         RedirectAttributes ra) {
-        var pubOpt = publiciteService.findById(id);
-        if (pubOpt.isEmpty()) {
-            ra.addFlashAttribute("errorMessage", "Publicité introuvable");
-            return "redirect:/backoffice/publicites";
-        }
-        
-        Publicite pub = pubOpt.get();
-        pub.setNbFois(nbFois);
-        publiciteService.save(pub);
-        
-        ra.addFlashAttribute("successMessage", "Diffusion mise à jour avec succès");
-        return "redirect:/backoffice/publicites";
+        return "backoffice/publicite-detail";
     }
 
     @PostMapping("/delete/{id}")
     public String delete(@PathVariable("id") Long id, RedirectAttributes ra) {
-        publiciteService.deleteById(id);
-        ra.addFlashAttribute("successMessage", "Diffusion supprimée avec succès");
+        try {
+            publiciteService.deleteById(id);
+            ra.addFlashAttribute("successMessage", "Publicité supprimée avec succès");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Erreur lors de la suppression: " + e.getMessage());
+        }
         return "redirect:/backoffice/publicites";
     }
 }
