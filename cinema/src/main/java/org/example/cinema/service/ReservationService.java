@@ -121,6 +121,24 @@ public class ReservationService {
         return result;
     }
 
+    /**
+     * Montant théorique des tickets par séance (somme des prix des tickets, peu importe le paiement)
+     */
+    public java.math.BigDecimal getMontantTheoriqueBySeanceId(Long seanceId) {
+        return ticketRepository.getMontantTheoriqueBySeanceId(seanceId);
+    }
+
+    /**
+     * Montants théoriques des tickets pour plusieurs séances
+     */
+    public java.util.Map<Long, java.math.BigDecimal> getMontantsTheoriquesBySeances(List<Long> seanceIds) {
+        java.util.Map<Long, java.math.BigDecimal> result = new java.util.HashMap<>();
+        for (Long seanceId : seanceIds) {
+            result.put(seanceId, getMontantTheoriqueBySeanceId(seanceId));
+        }
+        return result;
+    }
+
     @Transactional
     public Reservation createReservation(Client client, Seance seance, Map<Long, Long> placesWithCategories,
             Map<Long, CategoriePersonne> categoriesMap) {

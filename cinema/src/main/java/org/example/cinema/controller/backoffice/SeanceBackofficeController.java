@@ -92,9 +92,13 @@ public class SeanceBackofficeController {
 
         List<Long> seanceIds = seances.stream().map(Seance::getId).toList();
         
-        // CA réel (basé sur les réservations payées) = Montant généré par ticket
-        java.util.Map<Long, java.math.BigDecimal> chiffresAffaires = reservationService
+        // CA réel (basé sur les réservations payées) - gardé pour usage futur
+        java.util.Map<Long, java.math.BigDecimal> chiffresAffairesPaye = reservationService
                 .getChiffreAffairesBySeances(seanceIds);
+
+        // Montant théorique par ticket (somme des prix des tickets, peu importe le paiement)
+        java.util.Map<Long, java.math.BigDecimal> montantsTicketsTheorique = reservationService
+                .getMontantsTheoriquesBySeances(seanceIds);
 
         // CA maximal théorique par séance (somme des places * tarif max par type de place)
         java.util.Map<Long, java.math.BigDecimal> capacitesMax = new java.util.HashMap<>();
@@ -114,15 +118,15 @@ public class SeanceBackofficeController {
             capacitesMax.put(seance.getId(), total);
         }
 
-        // Montant généré par pub (montant payé au prorata par séance)
+        // Montant payé par pub (au prorata par séance) - gardé pour usage futur
         java.util.function.Function<Long, java.math.BigDecimal> totalPayeProvider = 
                 pubId -> paiementPubliciteService.getTotalPaye(pubId);
-        java.util.Map<Long, java.math.BigDecimal> montantsPub = publiciteService.calculerMontantsPubPayesPourSeances(
+        java.util.Map<Long, java.math.BigDecimal> montantsPubPaye = publiciteService.calculerMontantsPubPayesPourSeances(
                 seanceIds,
                 totalPayeProvider
         );
 
-        // Montant total de pub (à payer) par séance
+        // Montant total de pub (théorique) par séance
         java.util.Map<Long, java.math.BigDecimal> montantsTotalPub = publiciteService.calculerMontantsTotauxPubPourSeances(
                 seanceIds
         );
@@ -134,8 +138,10 @@ public class SeanceBackofficeController {
         );
 
         model.addAttribute("seances", seances);
-        model.addAttribute("chiffresAffaires", chiffresAffaires);
-        model.addAttribute("montantsPub", montantsPub);
+        model.addAttribute("chiffresAffaires", montantsTicketsTheorique);  // Théorique pour l'affichage
+        model.addAttribute("chiffresAffairesPaye", chiffresAffairesPaye);  // Payé gardé pour usage futur
+        model.addAttribute("montantsPub", montantsTotalPub);  // Théorique pour l'affichage
+        model.addAttribute("montantsPubPaye", montantsPubPaye);  // Payé gardé pour usage futur
         model.addAttribute("montantsTotalPub", montantsTotalPub);
         model.addAttribute("restesPubAPayer", restesPubAPayer);
         model.addAttribute("capacitesMax", capacitesMax);

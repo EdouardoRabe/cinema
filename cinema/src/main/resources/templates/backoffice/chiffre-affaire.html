@@ -70,7 +70,7 @@
             
             <!-- CA Tickets -->
             <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #2196f3; text-align: center;">
-                <p style="margin: 0; font-size: 1rem; color: #2196f3; font-weight: 500;">CA Tickets (Réservations)</p>
+                <p style="margin: 0; font-size: 1rem; color: #2196f3; font-weight: 500;">CA Tickets</p>
                 <p style="margin: 0.75rem 0 0 0; font-size: 1.75rem; font-weight: 700; color: #2196f3;" th:text="${#numbers.formatDecimal(caTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
                 <hr style="border: none; border-top: 1px solid #333; margin: 1rem 0;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
@@ -122,7 +122,7 @@
 
         <!-- Note explicative -->
         <div style="padding: 1rem; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; margin-top: 2rem;">
-            <p style="margin: 0; font-size: 0.9rem; color: #ffc107;">
+            <p style="margin: 0; font-size: 0.9rem; color: #ffc107; opacity: 0; ">
                 <strong>Note:</strong> Le CA affiché est le montant théorique basé sur les réservations (tickets), diffusions de publicités et ventes du mois sélectionné. 
                 Les détails "Payé" et "Reste" montrent le statut des paiements pour ces opérations.
             </p>
