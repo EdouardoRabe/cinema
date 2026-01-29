@@ -142,5 +142,3 @@ INSERT INTO publicite_detail (id_publicite, id_seance, nb_fois) VALUES
 INSERT INTO publicite_detail (id_publicite, id_seance, nb_fois) VALUES
 (1, 2, 2),  -- Vaniala - Séance 2 - 2 diffusions
 (3, 2, 1);  -- Socobis - Séance 2 - 1 diffusion
-
--- Séance 3 (21 janvier 15h): 0 pub (aucune insertion)

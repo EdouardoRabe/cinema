@@ -91,7 +91,7 @@ CREATE TABLE film (
         id SERIAL PRIMARY KEY,
         id_personne INT REFERENCES personne(id) NULL, 
         id_statut INT REFERENCES statut_reservation(id),
-        montant_total NUMERIC(6,2) DEFAULT 0,
+        montant_total NUMERIC(12,2) DEFAULT 0,
         cree_le TIMESTAMP DEFAULT now()
     );
 
