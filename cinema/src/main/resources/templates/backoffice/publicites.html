@@ -109,9 +109,9 @@
                         <td>
                             <a th:href="@{/backoffice/publicites/detail/{id}(id=${pub.id})}" class="btn btn-outline btn-sm">Détails</a>
                             <a th:href="@{/backoffice/paiements-publicite/{id}(id=${pub.id})}" class="btn btn-success btn-sm">Payer</a>
-                            <form th:action="@{/backoffice/publicites/delete/{id}(id=${pub.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette publicité et tous ses détails ?');">
+                            <!-- <form th:action="@{/backoffice/publicites/delete/{id}(id=${pub.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette publicité et tous ses détails ?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                            </form>
+                            </form> -->
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(publicites)}">
