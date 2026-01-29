@@ -25,4 +25,11 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     
     @Query("SELECT COALESCE(SUM(p.montantPaye), 0) FROM Paiement p WHERE YEAR(p.datePaiement) = :annee AND MONTH(p.datePaiement) = :mois")
     BigDecimal getTotalPayeByMoisAnnee(@Param("mois") int mois, @Param("annee") int annee);
+
+    @Query("SELECT COALESCE(SUM(p.montantPaye), 0) FROM Paiement p " +
+           "WHERE p.reservation.id IN (" +
+           "  SELECT DISTINCT t.reservation.id FROM Ticket t " +
+           "  WHERE MONTH(t.seance.debut) = :mois AND YEAR(t.seance.debut) = :annee" +
+           ")")
+    BigDecimal getTotalPayeBySeanceMoisAnnee(@Param("mois") int mois, @Param("annee") int annee);
 }

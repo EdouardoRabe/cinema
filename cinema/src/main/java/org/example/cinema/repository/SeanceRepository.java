@@ -67,4 +67,7 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
     @Query("SELECT s FROM Seance s LEFT JOIN FETCH s.film LEFT JOIN FETCH s.salle WHERE s.film.id = :filmId AND s.salle.id = :salleId AND s.debut >= :now ORDER BY s.debut ASC")
     List<Seance> findByFilmIdAndSalleId(@Param("filmId") Long filmId, @Param("salleId") Long salleId, @Param("now") LocalDateTime now);
+
+    @Query("SELECT s.id FROM Seance s WHERE MONTH(s.debut) = :mois AND YEAR(s.debut) = :annee")
+    List<Long> findIdsByMoisAnnee(@Param("mois") int mois, @Param("annee") int annee);
 }

@@ -26,18 +26,45 @@ public class ChiffreAffaireBackofficeController {
         if (mois == null) mois = LocalDate.now().getMonthValue();
         if (annee == null) annee = Year.now().getValue();
 
-        BigDecimal caTickets = chiffreAffaireService.getCATicketsByMoisAnnee(mois, annee);
-        BigDecimal caPublicites = chiffreAffaireService.getCAPublicitesByMoisAnnee(mois, annee);
-        BigDecimal caVentes = chiffreAffaireService.getCAVentesByMoisAnnee(mois, annee);
-        BigDecimal caTotal = chiffreAffaireService.getCATotalByMoisAnnee(mois, annee);
+        // CA Théorique (basé sur réservations/pubs/ventes, pas sur paiements)
+        BigDecimal caTickets = chiffreAffaireService.getCATicketsTheoriqueByMoisAnnee(mois, annee);
+        BigDecimal caPublicites = chiffreAffaireService.getCAPublicitesTheoriqueByMoisAnnee(mois, annee);
+        BigDecimal caVentes = chiffreAffaireService.getCAVentesTheoriqueByMoisAnnee(mois, annee);
+        BigDecimal caTotal = chiffreAffaireService.getCATotalTheoriqueByMoisAnnee(mois, annee);
+
+        // Total payé
+        BigDecimal payeTickets = chiffreAffaireService.getTotalPayeTicketsByMoisAnnee(mois, annee);
+        BigDecimal payePublicites = chiffreAffaireService.getTotalPayePublicitesByMoisAnnee(mois, annee);
+        BigDecimal payeVentes = chiffreAffaireService.getTotalPayeVentesByMoisAnnee(mois, annee);
+        BigDecimal payeTotal = chiffreAffaireService.getTotalPayeByMoisAnnee(mois, annee);
+
+        // Reste à payer
+        BigDecimal resteTickets = chiffreAffaireService.getResteAPayerTicketsByMoisAnnee(mois, annee);
+        BigDecimal restePublicites = chiffreAffaireService.getResteAPayerPublicitesByMoisAnnee(mois, annee);
+        BigDecimal resteVentes = chiffreAffaireService.getResteAPayerVentesByMoisAnnee(mois, annee);
+        BigDecimal resteTotal = chiffreAffaireService.getResteAPayerTotalByMoisAnnee(mois, annee);
 
         model.addAttribute("selectedMois", mois);
         model.addAttribute("selectedAnnee", annee);
         model.addAttribute("nomMois", getNomMois(mois));
+        
+        // CA Théorique
         model.addAttribute("caTickets", caTickets);
         model.addAttribute("caPublicites", caPublicites);
         model.addAttribute("caVentes", caVentes);
         model.addAttribute("caTotal", caTotal);
+        
+        // Total payé
+        model.addAttribute("payeTickets", payeTickets);
+        model.addAttribute("payePublicites", payePublicites);
+        model.addAttribute("payeVentes", payeVentes);
+        model.addAttribute("payeTotal", payeTotal);
+        
+        // Reste à payer
+        model.addAttribute("resteTickets", resteTickets);
+        model.addAttribute("restePublicites", restePublicites);
+        model.addAttribute("resteVentes", resteVentes);
+        model.addAttribute("resteTotal", resteTotal);
 
         return "backoffice/chiffre-affaire";
     }

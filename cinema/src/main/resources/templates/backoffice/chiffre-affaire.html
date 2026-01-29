@@ -52,35 +52,79 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             
             <!-- CA Total -->
-            <div style="padding: 2rem; background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%); border-radius: 16px; text-align: center;">
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%); border-radius: 16px; text-align: center;">
                 <p style="margin: 0; font-size: 1rem; color: rgba(0,0,0,0.7); font-weight: 500;">CA TOTAL</p>
-                <p style="margin: 1rem 0 0 0; font-size: 2.5rem; font-weight: 700; color: #000;" th:text="${#numbers.formatDecimal(caTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <p style="margin: 0.75rem 0 0 0; font-size: 2rem; font-weight: 700; color: #000;" th:text="${#numbers.formatDecimal(caTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.2); margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <div>
+                        <p style="margin: 0; color: rgba(0,0,0,0.6);">Payé</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1b5e20;" th:text="${#numbers.formatDecimal(payeTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: rgba(0,0,0,0.6);">Reste</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;" th:styleappend="${resteTotal > 0} ? 'color: #b71c1c;' : 'color: #1b5e20;'" th:text="${#numbers.formatDecimal(resteTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                </div>
             </div>
             
             <!-- CA Tickets -->
-            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #2196f3; text-align: center;">
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #2196f3; text-align: center;">
                 <p style="margin: 0; font-size: 1rem; color: #2196f3; font-weight: 500;">CA Tickets (Réservations)</p>
-                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #2196f3;" th:text="${#numbers.formatDecimal(caTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <p style="margin: 0.75rem 0 0 0; font-size: 1.75rem; font-weight: 700; color: #2196f3;" th:text="${#numbers.formatDecimal(caTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <hr style="border: none; border-top: 1px solid #333; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <div>
+                        <p style="margin: 0; color: #888;">Payé</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #4caf50;" th:text="${#numbers.formatDecimal(payeTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #888;">Reste</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;" th:styleappend="${resteTickets > 0} ? 'color: #f44336;' : 'color: #4caf50;'" th:text="${#numbers.formatDecimal(resteTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                </div>
             </div>
             
             <!-- CA Publicités -->
-            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #9c27b0; text-align: center;">
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #9c27b0; text-align: center;">
                 <p style="margin: 0; font-size: 1rem; color: #9c27b0; font-weight: 500;">CA Publicités</p>
-                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #9c27b0;" th:text="${#numbers.formatDecimal(caPublicites, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <p style="margin: 0.75rem 0 0 0; font-size: 1.75rem; font-weight: 700; color: #9c27b0;" th:text="${#numbers.formatDecimal(caPublicites, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <hr style="border: none; border-top: 1px solid #333; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <div>
+                        <p style="margin: 0; color: #888;">Payé</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #4caf50;" th:text="${#numbers.formatDecimal(payePublicites, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #888;">Reste</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;" th:styleappend="${restePublicites > 0} ? 'color: #f44336;' : 'color: #4caf50;'" th:text="${#numbers.formatDecimal(restePublicites, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                </div>
             </div>
             
             <!-- CA Ventes Produits -->
-            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #4caf50; text-align: center;">
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #4caf50; text-align: center;">
                 <p style="margin: 0; font-size: 1rem; color: #4caf50; font-weight: 500;">CA Ventes Produits</p>
-                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #4caf50;" th:text="${#numbers.formatDecimal(caVentes, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <p style="margin: 0.75rem 0 0 0; font-size: 1.75rem; font-weight: 700; color: #4caf50;" th:text="${#numbers.formatDecimal(caVentes, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <hr style="border: none; border-top: 1px solid #333; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <div>
+                        <p style="margin: 0; color: #888;">Payé</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #4caf50;" th:text="${#numbers.formatDecimal(payeVentes, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #888;">Reste</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;" th:styleappend="${resteVentes > 0} ? 'color: #f44336;' : 'color: #4caf50;'" th:text="${#numbers.formatDecimal(resteVentes, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Note explicative -->
         <div style="padding: 1rem; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; margin-top: 2rem;">
             <p style="margin: 0; font-size: 0.9rem; color: #ffc107;">
-                <strong>Note:</strong> Le chiffre d'affaires est calculé uniquement à partir des paiements effectués (présents dans les tables de paiements). 
-                La date prise en compte est la date du paiement.
+                <strong>Note:</strong> Le CA affiché est le montant théorique basé sur les réservations (tickets), diffusions de publicités et ventes du mois sélectionné. 
+                Les détails "Payé" et "Reste" montrent le statut des paiements pour ces opérations.
             </p>
         </div>
     </section>
