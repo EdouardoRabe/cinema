@@ -88,7 +88,7 @@
                         <div class="form-group" th:each="cat, catStat : ${categories}">
                             <label th:text="${cat.libelle}" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Catégorie</label>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <input class="form-input tarif-input" type="number" min="0" step="100" 
+                                <input class="form-input tarif-input" type="number" min="0" 
                                        th:id="${'tarif_' + tp.id + '_' + cat.id}"
                                        th:name="${'tarifs[' + tp.id + '_' + cat.id + ']'}" 
                                        th:value="${tarifsExistants.get(tp.id + '_' + cat.id)}" 

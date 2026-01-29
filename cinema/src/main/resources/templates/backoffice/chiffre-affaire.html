@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Chiffre d\'Affaires')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Chiffre d'Affaires</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/produits}" class="btn btn-outline">Produits</a>
+                <a th:href="@{/backoffice/ventes}" class="btn btn-outline">Ventes</a>
+                <a th:href="@{/backoffice/chiffre-affaire}" class="btn btn-primary">Chiffre d'Affaires</a>
+            </div>
+        </div>
+
+        <!-- Filtre par mois/année -->
+        <div class="filter-section" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #333;">
+            <h3 style="margin-bottom: 1rem; color: var(--gold);">Sélectionner la période</h3>
+            <form method="get" th:action="@{/backoffice/chiffre-affaire}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Mois</label>
+                    <select name="mois" class="form-input" style="width: 150px;">
+                        <option value="1" th:selected="${selectedMois == 1}">Janvier</option>
+                        <option value="2" th:selected="${selectedMois == 2}">Février</option>
+                        <option value="3" th:selected="${selectedMois == 3}">Mars</option>
+                        <option value="4" th:selected="${selectedMois == 4}">Avril</option>
+                        <option value="5" th:selected="${selectedMois == 5}">Mai</option>
+                        <option value="6" th:selected="${selectedMois == 6}">Juin</option>
+                        <option value="7" th:selected="${selectedMois == 7}">Juillet</option>
+                        <option value="8" th:selected="${selectedMois == 8}">Août</option>
+                        <option value="9" th:selected="${selectedMois == 9}">Septembre</option>
+                        <option value="10" th:selected="${selectedMois == 10}">Octobre</option>
+                        <option value="11" th:selected="${selectedMois == 11}">Novembre</option>
+                        <option value="12" th:selected="${selectedMois == 12}">Décembre</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Année</label>
+                    <input type="number" name="annee" class="form-input" th:value="${selectedAnnee}" min="2020" max="2030" style="width: 100px;">
+                </div>
+                <button type="submit" class="btn btn-primary">Afficher</button>
+            </form>
+        </div>
+
+        <!-- Titre de la période -->
+        <h3 style="margin-bottom: 1.5rem; text-align: center;">
+            Chiffre d'Affaires pour <span th:text="${nomMois + ' ' + selectedAnnee}" style="color: var(--gold);">Janvier 2026</span>
+        </h3>
+
+        <!-- Cartes des CA -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            
+            <!-- CA Total -->
+            <div style="padding: 2rem; background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%); border-radius: 16px; text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: rgba(0,0,0,0.7); font-weight: 500;">CA TOTAL</p>
+                <p style="margin: 1rem 0 0 0; font-size: 2.5rem; font-weight: 700; color: #000;" th:text="${#numbers.formatDecimal(caTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+            
+            <!-- CA Tickets -->
+            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #2196f3; text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: #2196f3; font-weight: 500;">CA Tickets (Réservations)</p>
+                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #2196f3;" th:text="${#numbers.formatDecimal(caTickets, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+            
+            <!-- CA Publicités -->
+            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #9c27b0; text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: #9c27b0; font-weight: 500;">CA Publicités</p>
+                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #9c27b0;" th:text="${#numbers.formatDecimal(caPublicites, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+            
+            <!-- CA Ventes Produits -->
+            <div style="padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 2px solid #4caf50; text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: #4caf50; font-weight: 500;">CA Ventes Produits</p>
+                <p style="margin: 1rem 0 0 0; font-size: 2rem; font-weight: 700; color: #4caf50;" th:text="${#numbers.formatDecimal(caVentes, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+        </div>
+
+        <!-- Note explicative -->
+        <div style="padding: 1rem; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; margin-top: 2rem;">
+            <p style="margin: 0; font-size: 0.9rem; color: #ffc107;">
+                <strong>Note:</strong> Le chiffre d'affaires est calculé uniquement à partir des paiements effectués (présents dans les tables de paiements). 
+                La date prise en compte est la date du paiement.
+            </p>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

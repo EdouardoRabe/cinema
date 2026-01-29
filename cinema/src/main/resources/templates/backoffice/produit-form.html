@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Produit')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title" th:text="${produit.id != null ? 'Modifier le produit' : 'Nouveau produit'}">Produit</h2>
+            <a th:href="@{/backoffice/produits}" class="btn btn-outline">← Retour</a>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="form-card" style="max-width: 500px;">
+            <form th:action="@{/backoffice/produits/save}" method="post">
+                <input type="hidden" th:if="${produit.id}" th:value="${produit.id}" name="id">
+                
+                <div class="form-group">
+                    <label class="form-label">Libellé *</label>
+                    <input type="text" name="libelle" class="form-input" th:value="${produit.libelle}" required placeholder="Ex: Pop-corn, Boisson...">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <a th:href="@{/backoffice/produits}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

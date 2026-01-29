@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Nouvelle Vente')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Nouvelle Vente</h2>
+            <a th:href="@{/backoffice/ventes}" class="btn btn-outline">Retour</a>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(produits)}" class="alert alert-warning" style="margin-bottom: 1rem;">
+            Aucun produit n'est défini. <a th:href="@{/backoffice/produits/create}" style="color: var(--gold);">Créer un produit</a> d'abord.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(produits)}" class="form-card" style="max-width: 800px;">
+            <form th:action="@{/backoffice/ventes/save}" method="post" id="venteForm">
+                <div class="form-group">
+                    <label class="form-label">Date de la vente *</label>
+                    <input type="date" name="dateVente" class="form-input" required style="max-width: 200px;">
+                </div>
+
+                <h3 style="margin: 1.5rem 0 1rem 0; color: var(--gold);">Produits de la vente</h3>
+                
+                <div id="lignesVente">
+                    <div class="ligne-vente" style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 2;">
+                            <label class="form-label">Produit *</label>
+                            <select name="produitIds" class="form-input" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option th:each="p : ${produits}" th:value="${p.id}" th:text="${p.libelle}">Produit</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; width: 100px;">
+                            <label class="form-label">Quantité *</label>
+                            <input type="number" name="quantites" class="form-input" value="1" min="1" required>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm btn-supprimer" onclick="supprimerLigne(this)" style="display: none;">X</button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline" onclick="ajouterLigne()" style="margin-bottom: 1.5rem;">+ Ajouter un produit</button>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Créer la vente</button>
+                    <a th:href="@{/backoffice/ventes}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script th:inline="javascript">
+        function ajouterLigne() {
+            var container = document.getElementById('lignesVente');
+            var lignes = container.querySelectorAll('.ligne-vente');
+            var nouvelleLigne = lignes[0].cloneNode(true);
+            
+            // Reset values
+            nouvelleLigne.querySelector('select').selectedIndex = 0;
+            nouvelleLigne.querySelector('input[name="quantites"]').value = '1';
+            
+            // Show delete button
+            nouvelleLigne.querySelector('.btn-supprimer').style.display = 'block';
+            
+            container.appendChild(nouvelleLigne);
+            mettreAJourBoutonsSuppression();
+        }
+
+        function supprimerLigne(btn) {
+            var ligne = btn.closest('.ligne-vente');
+            ligne.remove();
+            mettreAJourBoutonsSuppression();
+        }
+
+        function mettreAJourBoutonsSuppression() {
+            var lignes = document.querySelectorAll('.ligne-vente');
+            lignes.forEach(function(ligne, index) {
+                var btnSupprimer = ligne.querySelector('.btn-supprimer');
+                if (lignes.length > 1) {
+                    btnSupprimer.style.display = 'block';
+                } else {
+                    btnSupprimer.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Produits')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Produits</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/produits}" class="btn btn-primary">Produits</a>
+                <a th:href="@{/backoffice/ventes}" class="btn btn-outline">Ventes</a>
+                <a th:href="@{/backoffice/chiffre-affaire}" class="btn btn-outline">Chiffre d'Affaires</a>
+                <a th:href="@{/backoffice/produits/create}" class="btn btn-gold">+ Nouveau</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Libellé</th>
+                        <th>Prix actuel</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="produit : ${produits}">
+                        <td th:text="${produit.id}">1</td>
+                        <td th:text="${produit.libelle}">Pop-corn</td>
+                        <td style="font-weight: 600; color: var(--gold);">
+                            <span th:if="${prixActuels[produit.id] != null && prixActuels[produit.id].compareTo(T(java.math.BigDecimal).ZERO) > 0}" 
+                                  th:text="${#numbers.formatDecimal(prixActuels[produit.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">10,000 Ar</span>
+                            <span th:unless="${prixActuels[produit.id] != null && prixActuels[produit.id].compareTo(T(java.math.BigDecimal).ZERO) > 0}" 
+                                  style="color: #888;">Non défini</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/backoffice/produits/prix/{id}(id=${produit.id})}" class="btn btn-gold btn-sm">Prix</a>
+                            <a th:href="@{/backoffice/produits/edit/{id}(id=${produit.id})}" class="btn btn-primary btn-sm">Éditer</a>
+                            <form th:action="@{/backoffice/produits/delete/{id}(id=${produit.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer ce produit ?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(produits)}">
+                        <td colspan="4" style="text-align: center; color: #aaa;">Aucun produit enregistré</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

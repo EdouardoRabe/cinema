@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Paiement Vente')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Paiement - Vente #<span th:text="${vente.id}">1</span></h2>
+            <a th:href="@{/backoffice/ventes/view/{id}(id=${vente.id})}" class="btn btn-outline">← Retour</a>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <!-- Résumé financier -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #333;">
+                <p style="margin: 0; font-size: 0.9rem; color: #aaa;">Montant total</p>
+                <p style="margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: var(--gold);" th:text="${#numbers.formatDecimal(montantTotal, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #333;">
+                <p style="margin: 0; font-size: 0.9rem; color: #aaa;">Total payé</p>
+                <p style="margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #4caf50;" th:text="${#numbers.formatDecimal(totalPaye, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+            </div>
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #333;">
+                <p style="margin: 0; font-size: 0.9rem; color: #aaa;">Reste à payer</p>
+                <p th:if="${resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}" style="margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #f44336;" th:text="${#numbers.formatDecimal(resteAPayer, 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</p>
+                <p th:unless="${resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}" style="margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #4caf50;">Soldé ✓</p>
+            </div>
+        </div>
+
+        <!-- Formulaire de paiement -->
+        <div th:if="${resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}" class="form-card" style="max-width: 500px; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--gold);">Effectuer un paiement</h3>
+            <form th:action="@{/backoffice/ventes/paiement/{id}/save(id=${vente.id})}" method="post">
+                <div class="form-group">
+                    <label class="form-label">Montant (Ar) *</label>
+                    <input type="number" name="montant" class="form-input" required min="1" th:max="${resteAPayer}" th:value="${resteAPayer}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date du paiement *</label>
+                    <input type="date" name="datePaiement" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-gold">Enregistrer le paiement</button>
+                </div>
+            </form>
+        </div>
+
+        <div th:unless="${resteAPayer.compareTo(T(java.math.BigDecimal).ZERO) > 0}" class="alert alert-success" style="margin-bottom: 2rem;">
+            <strong>✓</strong> Cette vente est entièrement soldée.
+        </div>
+
+        <!-- Historique des paiements -->
+        <h3 style="margin-bottom: 1rem;">Historique des paiements</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Montant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="paiement : ${paiements}">
+                        <td th:text="${#temporals.format(paiement.datePaiement, 'dd/MM/yyyy')}">01/01/2026</td>
+                        <td style="color: #4caf50; font-weight: 600;" th:text="${#numbers.formatDecimal(paiement.montantPaye, 0, 'COMMA', 0, 'POINT')} + ' Ar'">50,000 Ar</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(paiements)}">
+                        <td colspan="2" style="text-align: center; color: #aaa;">Aucun paiement</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

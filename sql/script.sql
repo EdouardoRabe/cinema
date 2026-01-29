@@ -228,3 +228,45 @@ CREATE TABLE film (
     );
 
     CREATE INDEX idx_paiement_publicite ON paiement_publicite(id_publicite);
+
+    -- ==============================
+    -- VENTE DE PRODUITS (POP-CORN, BOISSONS, etc.)
+    -- ==============================
+    
+    CREATE TABLE produit (
+        id SERIAL PRIMARY KEY,
+        libelle TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE prix_produit (
+        id SERIAL PRIMARY KEY,
+        id_produit INT REFERENCES produit(id) ON DELETE CASCADE,
+        prix NUMERIC(12,2) NOT NULL,
+        date_prix DATE NOT NULL
+    );
+
+    CREATE INDEX idx_prix_produit_lookup ON prix_produit(id_produit, date_prix DESC);
+
+    CREATE TABLE vente (
+        id SERIAL PRIMARY KEY,
+        date_vente DATE NOT NULL
+    );
+
+    CREATE TABLE vente_detail (
+        id SERIAL PRIMARY KEY,
+        id_vente INT REFERENCES vente(id) ON DELETE CASCADE,
+        id_produit INT REFERENCES produit(id) ON DELETE CASCADE,
+        quantite INT NOT NULL DEFAULT 1 CHECK (quantite > 0),
+        prix_unitaire NUMERIC(12,2) NOT NULL
+    );
+
+    CREATE INDEX idx_vente_detail_vente ON vente_detail(id_vente);
+
+    CREATE TABLE paiement_vente (
+        id SERIAL PRIMARY KEY,
+        id_vente INT REFERENCES vente(id) ON DELETE CASCADE,
+        montant_paye NUMERIC(12,2) NOT NULL CHECK (montant_paye > 0),
+        date_paiement DATE NOT NULL
+    );
+
+    CREATE INDEX idx_paiement_vente ON paiement_vente(id_vente);

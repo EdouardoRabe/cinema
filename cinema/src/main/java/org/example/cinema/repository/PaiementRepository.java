@@ -22,4 +22,7 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     List<Paiement> findByReservationIdOrderByDateDesc(@Param("reservationId") Long reservationId);
     
     Optional<Paiement> findFirstByReservationIdOrderByDatePaiementDesc(Long reservationId);
+    
+    @Query("SELECT COALESCE(SUM(p.montantPaye), 0) FROM Paiement p WHERE YEAR(p.datePaiement) = :annee AND MONTH(p.datePaiement) = :mois")
+    BigDecimal getTotalPayeByMoisAnnee(@Param("mois") int mois, @Param("annee") int annee);
 }

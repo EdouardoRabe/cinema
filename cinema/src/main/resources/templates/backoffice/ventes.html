@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Backoffice - Ventes')}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar('backoffice')}"></nav>
+
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Ventes</h2>
+            <div class="pub-nav-buttons">
+                <a th:href="@{/backoffice/produits}" class="btn btn-outline">Produits</a>
+                <a th:href="@{/backoffice/ventes}" class="btn btn-primary">Ventes</a>
+                <a th:href="@{/backoffice/chiffre-affaire}" class="btn btn-outline">Chiffre d'Affaires</a>
+                <a th:href="@{/backoffice/ventes/create}" class="btn btn-gold">+ Nouvelle</a>
+            </div>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;">
+            <strong>✓</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;">
+            <strong>✕</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <!-- Filtre par mois/année -->
+        <div class="filter-section" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid #333;">
+            <h3 style="margin-bottom: 1rem; color: var(--gold);">Filtrer par mois</h3>
+            <form method="get" th:action="@{/backoffice/ventes}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Mois</label>
+                    <select name="mois" class="form-input" style="width: 150px;">
+                        <option value="1" th:selected="${selectedMois == 1}">Janvier</option>
+                        <option value="2" th:selected="${selectedMois == 2}">Février</option>
+                        <option value="3" th:selected="${selectedMois == 3}">Mars</option>
+                        <option value="4" th:selected="${selectedMois == 4}">Avril</option>
+                        <option value="5" th:selected="${selectedMois == 5}">Mai</option>
+                        <option value="6" th:selected="${selectedMois == 6}">Juin</option>
+                        <option value="7" th:selected="${selectedMois == 7}">Juillet</option>
+                        <option value="8" th:selected="${selectedMois == 8}">Août</option>
+                        <option value="9" th:selected="${selectedMois == 9}">Septembre</option>
+                        <option value="10" th:selected="${selectedMois == 10}">Octobre</option>
+                        <option value="11" th:selected="${selectedMois == 11}">Novembre</option>
+                        <option value="12" th:selected="${selectedMois == 12}">Décembre</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: #aaa;">Année</label>
+                    <input type="number" name="annee" class="form-input" th:value="${selectedAnnee}" min="2020" max="2030" style="width: 100px;">
+                </div>
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </form>
+        </div>
+
+        <!-- Tableau des ventes -->
+        <h3 style="margin-bottom: 1rem;">Ventes de <span th:text="${nomMois + ' ' + selectedAnnee}" style="color: var(--gold);">Janvier 2026</span></h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Montant total</th>
+                        <th>Payé</th>
+                        <th>Reste à payer</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="vente : ${ventes}">
+                        <td th:text="${vente.id}">1</td>
+                        <td th:text="${#temporals.format(vente.dateVente, 'dd/MM/yyyy')}">01/01/2026</td>
+                        <td style="font-weight: 600; color: var(--gold);">
+                            <span th:text="${#numbers.formatDecimal(montantsTotaux[vente.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">100,000 Ar</span>
+                        </td>
+                        <td style="color: #4caf50;">
+                            <span th:text="${#numbers.formatDecimal(totalPayeMap[vente.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">0 Ar</span>
+                        </td>
+                        <td>
+                            <span th:if="${resteAPayerMap[vente.id].compareTo(T(java.math.BigDecimal).ZERO) > 0}" 
+                                  style="color: #f44336;" th:text="${#numbers.formatDecimal(resteAPayerMap[vente.id], 0, 'COMMA', 0, 'POINT')} + ' Ar'">100,000 Ar</span>
+                            <span th:unless="${resteAPayerMap[vente.id].compareTo(T(java.math.BigDecimal).ZERO) > 0}" 
+                                  class="badge badge-success">Soldé</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/backoffice/ventes/view/{id}(id=${vente.id})}" class="btn btn-primary btn-sm">Voir</a>
+                            <a th:href="@{/backoffice/ventes/paiement/{id}(id=${vente.id})}" class="btn btn-gold btn-sm">Payer</a>
+                            <form th:action="@{/backoffice/ventes/delete/{id}(id=${vente.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer cette vente ?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(ventes)}">
+                        <td colspan="6" style="text-align: center; color: #aaa;">Aucune vente pour ce mois</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

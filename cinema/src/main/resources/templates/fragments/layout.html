@@ -26,7 +26,9 @@
             <li><a th:href="@{/backoffice/seances}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/seances')} ? 'active' : ''">Séances</a></li>
             <li><a th:href="@{/backoffice/categories-personne}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/categories-personne')} ? 'active' : ''">Catégories</a></li>
             <li><a th:href="@{/backoffice/reservations}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/reservations')} ? 'active' : ''">Réservations</a></li>
-            <li><a th:href="@{/backoffice/publicites}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/publicites')} ? 'active' : ''" style="color: var(--gold);"> Publicités</a></li>
+            <li><a th:href="@{/backoffice/publicites}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/publicites')} ? 'active' : ''">Publicités</a></li>
+            <li><a th:href="@{/backoffice/ventes}" th:classappend="${request != null and (request.requestURI.startsWith('/backoffice/ventes') or request.requestURI.startsWith('/backoffice/produits'))} ? 'active' : ''">Ventes</a></li>
+            <li><a th:href="@{/backoffice/chiffre-affaire}" th:classappend="${request != null and request.requestURI.startsWith('/backoffice/chiffre-affaire')} ? 'active' : ''">CA</a></li>
         </ul>
         <div class="nav-actions">
             <a th:href="@{/}" class="btn btn-outline">Voir le site</a>

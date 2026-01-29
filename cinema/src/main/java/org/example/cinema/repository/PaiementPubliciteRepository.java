@@ -24,4 +24,7 @@ public interface PaiementPubliciteRepository extends JpaRepository<PaiementPubli
     BigDecimal getTotalPaye(@Param("publicite") Publicite publicite);
 
     void deleteByPublicite(Publicite publicite);
+    
+    @Query("SELECT COALESCE(SUM(p.montant), 0) FROM PaiementPublicite p WHERE YEAR(p.datePaiement) = :annee AND MONTH(p.datePaiement) = :mois")
+    BigDecimal getTotalPayeByMoisAnnee(@Param("mois") int mois, @Param("annee") int annee);
 }
